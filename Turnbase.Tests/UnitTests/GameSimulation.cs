@@ -98,7 +98,7 @@ namespace Turnbase.Tests.UnitTests
             // Load dictionary words
             if (DictionaryWords.Count == 0)
             {
-                string dictionaryPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "../../dictionary.csv");
+                string dictionaryPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "dictionary.csv");
                 if (File.Exists(dictionaryPath))
                 {
                     foreach (var line in File.ReadAllLines(dictionaryPath))
@@ -165,6 +165,7 @@ namespace Turnbase.Tests.UnitTests
                     }
                     else
                     {
+                        
                         TestContext.WriteLine($"Turn {turnCount}: {currentPlayer} retry {retryCount} failed: {error}");
                     }
                 }
