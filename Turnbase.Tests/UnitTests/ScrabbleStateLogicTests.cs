@@ -189,7 +189,7 @@ namespace Turnbase.Tests.UnitTests
         public void CalculateScores_ReturnsCorrectScores()
         {
             string currentStateJson = @"{
-                ""Board"": [
+                ""BoardTiles"": [
                     { ""Letter"": ""H"", ""X"": 7, ""Y"": 7 },
                     { ""Letter"": ""E"", ""X"": 8, ""Y"": 7 },
                     { ""Letter"": ""L"", ""X"": 9, ""Y"": 7 },
@@ -201,14 +201,16 @@ namespace Turnbase.Tests.UnitTests
                     { ""Id"": ""player2"", ""Rack"": [""T"", ""E"", ""S"", ""T"", ""I"", ""N"", ""G""] }
                 ],
                 ""CurrentPlayer"": ""player2"",
-                ""FirstMove"": false
+                ""FirstMove"": false,
+                ""PlayerOrder"": [""player1"", ""player2""],
+                ""PlayerScores"": { ""player1"": 8 }
             }";
 
             IDictionary<string, long> scores = _logic.CalculateScores(currentStateJson);
 
             Assert.IsNotNull(scores);
             Assert.That(scores, Contains.Key("player1"));
-            Assert.That(scores["player1"], Is.GreaterThan(0));
+            Assert.That(scores["player1"], Is.EqualTo(8));
         }
     }
 }
