@@ -30,7 +30,7 @@ public class ScrabbleStateLogic : IGameStateLogic
         
         private class ScrabbleState
         {
-            public string?[][] Board { get; set; } = InitializeBoard();
+            public string[][] Board { get; set; } = InitializeBoard();
             public List<PlayerInfo> Players { get; set; } = new();
             public Dictionary<string, int> PlayerScores { get; set; } = new();
             public string[] TileBag { get; set; } = new string[0];
@@ -39,12 +39,12 @@ public class ScrabbleStateLogic : IGameStateLogic
             public bool FirstMove { get; set; } = true;
         }
         
-        private static string?[][] InitializeBoard()
+        private static string[][] InitializeBoard()
         {
-            var board = new string?[15][];
+            var board = new string[15][];
             for (int i = 0; i < 15; i++)
             {
-                board[i] = new string?[15];
+                board[i] = new string[15];
             }
             return board;
         }
@@ -150,7 +150,7 @@ public class ScrabbleStateLogic : IGameStateLogic
             }
             if (move.PlayerId != state.CurrentPlayer)
             {
-                error = "Not your turn.";
+                error = "not your turn";
                 return false;
             }
             if (move.Tiles.Count == 0)
@@ -169,7 +169,7 @@ public class ScrabbleStateLogic : IGameStateLogic
             {
                 if (!rack.Remove(tile.Letter))
                 {
-                    error = $"Tile '{tile.Letter}' not in rack.";
+                    error = "not in rack";
                     return false;
                 }
                 if (tile.X < 0 || tile.X >= BoardSize || tile.Y < 0 || tile.Y >= BoardSize)
@@ -177,8 +177,6 @@ public class ScrabbleStateLogic : IGameStateLogic
                     error = "Tile out of board bounds.";
                     return false;
                 }
-                if (state.Board[tile.Y] == null)
-                    state.Board[tile.Y] = new string[15];
                 if (state.Board[tile.Y][tile.X] != null)
                 {
                     error = "Cell already occupied.";
@@ -228,8 +226,6 @@ public class ScrabbleStateLogic : IGameStateLogic
             // Place tiles
             foreach (var tile in move.Tiles)
             {
-                if (state.Board[tile.Y] == null)
-                    state.Board[tile.Y] = new string[15];
                 state.Board[tile.Y][tile.X] = tile.Letter;
             }
             var player = state.Players.FirstOrDefault(p => p.Id == move.PlayerId);
