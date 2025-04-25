@@ -30,7 +30,12 @@ public class ScrabbleStateLogic : IGameStateLogic
         
         private class ScrabbleState
         {
-            public string[][] Board { get; set; } = InitializeBoard();
+            private string[][] _board = InitializeBoard();
+            public string[][] Board 
+            { 
+                get => _board; 
+                set => _board = value ?? InitializeBoard(); 
+            }
             public List<PlayerInfo> Players { get; set; } = new();
             public Dictionary<string, int> PlayerScores { get; set; } = new();
             public string[] TileBag { get; set; } = new string[0];
@@ -148,6 +153,18 @@ public class ScrabbleStateLogic : IGameStateLogic
                 error = "Invalid state or move JSON.";
                 return false;
             }
+            // Ensure board is properly initialized
+            if (state.Board == null || state.Board.Length != 15)
+            {
+                state.Board = InitializeBoard();
+            }
+            for (int i = 0; i < 15; i++)
+            {
+                if (state.Board[i] == null || state.Board[i].Length != 15)
+                {
+                    state.Board[i] = new string[15];
+                }
+            }
             if (move.PlayerId != state.CurrentPlayer)
             {
                 error = "not your turn";
@@ -223,6 +240,18 @@ public class ScrabbleStateLogic : IGameStateLogic
             var state = JsonSerializer.Deserialize<ScrabbleState>(currentStateJson);
             var move = JsonSerializer.Deserialize<ScrabbleMove>(moveJson);
             if (state == null || move == null) return currentStateJson;
+            // Ensure board is properly initialized
+            if (state.Board == null || state.Board.Length != 15)
+            {
+                state.Board = InitializeBoard();
+            }
+            for (int i = 0; i < 15; i++)
+            {
+                if (state.Board[i] == null || state.Board[i].Length != 15)
+                {
+                    state.Board[i] = new string[15];
+                }
+            }
             // Place tiles
             foreach (var tile in move.Tiles)
             {
@@ -259,6 +288,18 @@ public class ScrabbleStateLogic : IGameStateLogic
         {
             var state = JsonSerializer.Deserialize<ScrabbleState>(currentStateJson);
             if (state == null) return new Dictionary<string, long>();
+            // Ensure board is properly initialized
+            if (state.Board == null || state.Board.Length != 15)
+            {
+                state.Board = InitializeBoard();
+            }
+            for (int i = 0; i < 15; i++)
+            {
+                if (state.Board[i] == null || state.Board[i].Length != 15)
+                {
+                    state.Board[i] = new string[15];
+                }
+            }
             
             var result = new Dictionary<string, long>();
             foreach (var playerId in state.PlayerOrder)
