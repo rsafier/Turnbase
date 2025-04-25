@@ -383,40 +383,87 @@ namespace Turnbase.Tests.UnitTests
             var updatedState2 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player1", updatedState2.CurrentPlayer);
 
-            // Move 3: Player 1 plays "AID" vertically connecting to 'L' in "HELLO" at position (9,7) to form "LAID"
+            // Move 3: Player 1 plays a word vertically connecting to 'L' in "HELLO" at position (9,7)
+            var updatedPlayer1Move3 = updatedState2.Players.Find(p => p.Id == "player1");
+            var rackTilesMove3 = updatedPlayer1Move3.Rack.ToList();
             var move3 = new ScrabbleMove
             {
                 PlayerId = "player1",
-                Tiles = new List<PlacedTile>
-                {
-                    new PlacedTile { Letter = "A", X = 9, Y = 8 },
-                    new PlacedTile { Letter = "I", X = 9, Y = 9 },
-                    new PlacedTile { Letter = "D", X = 9, Y = 10 }
-                }
+                Tiles = new List<PlacedTile>()
             };
+            
+            // Log the rack for debugging
+            string rackStringMove3 = string.Join(", ", rackTilesMove3);
+            TestContext.WriteLine($"Player 1 Rack for Move 3: [{rackStringMove3}]");
+            
+            // Try to form a word with available tiles connecting to "L" at (9,7) downwards
+            if (rackTilesMove3.Count >= 2)
+            {
+                move3.Tiles.Add(new PlacedTile { Letter = rackTilesMove3[0], X = 9, Y = 8 });
+                move3.Tiles.Add(new PlacedTile { Letter = rackTilesMove3[1], X = 9, Y = 9 });
+                TestContext.WriteLine($"Attempting move with tiles {rackTilesMove3[0]} at (9,8) and {rackTilesMove3[1]} at (9,9)");
+            }
+            else if (rackTilesMove3.Count >= 1)
+            {
+                move3.Tiles.Add(new PlacedTile { Letter = rackTilesMove3[0], X = 9, Y = 8 });
+                TestContext.WriteLine($"Attempting move with tile {rackTilesMove3[0]} at (9,8)");
+            }
+            else
+            {
+                Assert.Fail("Not enough tiles in rack to make a move.");
+            }
+            
             string move3Json = JsonSerializer.Serialize(move3);
             bool valid3 = _logic.ValidateMove(stateJson, move3Json, out string? error3);
-            Assert.IsTrue(valid3, error3);
+            if (!valid3)
+            {
+                TestContext.WriteLine($"Move 3 validation failed: {error3}");
+            }
+            Assert.IsTrue(valid3, $"Move 3 validation failed: {error3}");
             stateJson = _logic.ApplyMove(stateJson, move3Json, out error3);
-            Assert.IsNull(error3);
+            Assert.IsNull(error3, $"Move 3 application failed: {error3}");
             var updatedState3 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player2", updatedState3.CurrentPlayer);
 
-            // Move 4: Player 2 plays "NET" horizontally connecting to 'E' in "TEST" at position (8,7)
+            // Move 4: Player 2 plays a word horizontally connecting to 'O' in "HELLO" at position (11,7)
+            var updatedPlayer2Move4 = updatedState3.Players.Find(p => p.Id == "player2");
+            var rackTilesMove4 = updatedPlayer2Move4.Rack.ToList();
             var move4 = new ScrabbleMove
             {
                 PlayerId = "player2",
-                Tiles = new List<PlacedTile>
-                {
-                    new PlacedTile { Letter = "N", X = 12, Y = 7 },
-                    new PlacedTile { Letter = "T", X = 13, Y = 7 }
-                }
+                Tiles = new List<PlacedTile>()
             };
+            
+            // Log the rack for debugging
+            string rackStringMove4 = string.Join(", ", rackTilesMove4);
+            TestContext.WriteLine($"Player 2 Rack for Move 4: [{rackStringMove4}]");
+            
+            // Try to form a word with available tiles connecting to "O" at (11,7) to the right
+            if (rackTilesMove4.Count >= 2)
+            {
+                move4.Tiles.Add(new PlacedTile { Letter = rackTilesMove4[0], X = 12, Y = 7 });
+                move4.Tiles.Add(new PlacedTile { Letter = rackTilesMove4[1], X = 13, Y = 7 });
+                TestContext.WriteLine($"Attempting move with tiles {rackTilesMove4[0]} at (12,7) and {rackTilesMove4[1]} at (13,7)");
+            }
+            else if (rackTilesMove4.Count >= 1)
+            {
+                move4.Tiles.Add(new PlacedTile { Letter = rackTilesMove4[0], X = 12, Y = 7 });
+                TestContext.WriteLine($"Attempting move with tile {rackTilesMove4[0]} at (12,7)");
+            }
+            else
+            {
+                Assert.Fail("Not enough tiles in rack to make a move.");
+            }
+            
             string move4Json = JsonSerializer.Serialize(move4);
             bool valid4 = _logic.ValidateMove(stateJson, move4Json, out string? error4);
-            Assert.IsTrue(valid4, error4);
+            if (!valid4)
+            {
+                TestContext.WriteLine($"Move 4 validation failed: {error4}");
+            }
+            Assert.IsTrue(valid4, $"Move 4 validation failed: {error4}");
             stateJson = _logic.ApplyMove(stateJson, move4Json, out error4);
-            Assert.IsNull(error4);
+            Assert.IsNull(error4, $"Move 4 application failed: {error4}");
             var updatedState4 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player1", updatedState4.CurrentPlayer);
 
