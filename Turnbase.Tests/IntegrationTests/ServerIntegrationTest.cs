@@ -54,7 +54,10 @@ namespace Turnbase.Tests.IntegrationTests
                                    endpoints.MapHub<GameHub>("/gamehub");
                                    endpoints.MapPost("/api/games", async (GameContext db) =>
                                    {
-                                       var game = new Game { CreatedDate = DateTime.UtcNow };
+                                       var game = new Game { 
+                                           CreatedDate = DateTime.UtcNow,
+                                           GameTypeName = "Scrabble"
+                                       };
                                        db.Games.Add(game);
                                        await db.SaveChangesAsync();
                                        
