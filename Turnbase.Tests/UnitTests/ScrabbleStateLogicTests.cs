@@ -430,15 +430,21 @@ namespace Turnbase.Tests.UnitTests
                 Tiles = new List<PlacedTile>()
             };
             
-            // Try to form a word with available tiles connecting to "L" at (10,7)
+            // Log the rack for debugging
+            string rackString = string.Join(", ", rackTiles);
+            TestContext.WriteLine($"Player 1 Rack for Move 5: [{rackString}]");
+            
+            // Try to form a word with available tiles connecting to "L" at (10,7) to form a potential word downwards
             if (rackTiles.Count >= 2)
             {
                 move5.Tiles.Add(new PlacedTile { Letter = rackTiles[0], X = 10, Y = 8 });
                 move5.Tiles.Add(new PlacedTile { Letter = rackTiles[1], X = 10, Y = 9 });
+                TestContext.WriteLine($"Attempting move with tiles {rackTiles[0]} at (10,8) and {rackTiles[1]} at (10,9)");
             }
             else if (rackTiles.Count >= 1)
             {
                 move5.Tiles.Add(new PlacedTile { Letter = rackTiles[0], X = 10, Y = 8 });
+                TestContext.WriteLine($"Attempting move with tile {rackTiles[0]} at (10,8)");
             }
             else
             {
@@ -448,9 +454,13 @@ namespace Turnbase.Tests.UnitTests
             stateJson = JsonSerializer.Serialize(updatedState4);
             string move5Json = JsonSerializer.Serialize(move5);
             bool valid5 = _logic.ValidateMove(stateJson, move5Json, out string? error5);
-            Assert.IsTrue(valid5, error5);
+            if (!valid5)
+            {
+                TestContext.WriteLine($"Move 5 validation failed: {error5}");
+            }
+            Assert.IsTrue(valid5, $"Move 5 validation failed: {error5}");
             stateJson = _logic.ApplyMove(stateJson, move5Json, out error5);
-            Assert.IsNull(error5);
+            Assert.IsNull(error5, $"Move 5 application failed: {error5}");
             var finalState = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player2", finalState.CurrentPlayer);
 
