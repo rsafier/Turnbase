@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json;
@@ -118,6 +119,7 @@ namespace Turnbase.Tests.UnitTests
             string stateJson = JsonSerializer.Serialize(state);
             int maxTurns = 10;
             int turnCount = 0;
+            var failedCombinations = new HashSet<string>();
 
             while (turnCount < maxTurns)
             {
@@ -130,7 +132,7 @@ namespace Turnbase.Tests.UnitTests
                 while (retryCount < 100 && !moveSuccessful)
                 {
                     retryCount++;
-                    var move = GenerateMove(currentState, currentPlayer);
+                    var move = GenerateMove(currentState, currentPlayer, failedCombinations);
                     string moveJson = JsonSerializer.Serialize(move);
 
                     bool isValid = _logic.ValidateMove(stateJson, moveJson, out string? error);
@@ -139,6 +141,7 @@ namespace Turnbase.Tests.UnitTests
                         stateJson = _logic.ApplyMove(stateJson, moveJson, out error);
                         moveSuccessful = true;
                         TestContext.WriteLine($"Turn {turnCount}: {currentPlayer} made a successful move.");
+                        failedCombinations.Clear(); // Reset failed combinations on successful move
                         break;
                     }
                     else
@@ -184,11 +187,15 @@ namespace Turnbase.Tests.UnitTests
             return state;
         }
 
-        private ScrabbleMove GenerateMove(ScrabbleState state, string playerId)
+        private ScrabbleMove GenerateMove(ScrabbleState state, string playerId, HashSet<string> failedCombinations)
         {
             var player = state.Players.First(p => p.Id == playerId);
             var rack = player.Rack.ToList();
             var move = new ScrabbleMove { PlayerId = playerId, Tiles = new List<PlacedTile>() };
+
+            // Shuffle rack to try different letter combinations
+            var random = new Random();
+            rack = rack.OrderBy(x => random.Next()).ToList();
 
             if (state.FirstMove)
             {
@@ -286,6 +293,10 @@ namespace Turnbase.Tests.UnitTests
                     }
                 }
             }
+
+            // Record the attempted combination to avoid retrying it
+            string combination = string.Join("", move.Tiles.Select(t => t.Letter));
+            failedCombinations.Add(combination);
 
             return move;
         }
