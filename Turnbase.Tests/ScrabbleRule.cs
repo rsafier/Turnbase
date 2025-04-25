@@ -1,12 +1,18 @@
 using System.Text.Json;
 using Turnbase.Server.GameLogic;
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.Json;
+using Turnbase.Server.GameLogic;
+
 namespace Turnbase.Rules
 {
-
-public class ScrabbleStateLogic : IGameStateLogic
+    public class ScrabbleStateLogic : IGameStateLogic
     {
-        private  readonly HashSet<string> Dictionary = LoadDictionary();
+        private readonly HashSet<string> Dictionary = LoadDictionary();
 
         private static HashSet<string> LoadDictionary()
         {
@@ -76,6 +82,7 @@ public class ScrabbleStateLogic : IGameStateLogic
             public string PlayerId { get; set; } = "";
             public List<PlacedTile> Tiles { get; set; } = new();
         }
+        
         private class PlacedTile
         {
             public int X { get; set; }
@@ -355,6 +362,5 @@ public class ScrabbleStateLogic : IGameStateLogic
             public List<string> PlayerOrder { get; set; } = new List<string>();
             public bool FirstMove { get; set; } = true;
         }
-
     }
 }
