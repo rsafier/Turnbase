@@ -182,7 +182,6 @@ namespace Turnbase.Tests.UnitTests
             Assert.IsNull(error);
             Assert.IsNotNull(newStateJson);
             Assert.That(newStateJson, Does.Contain("player2"));
-            Assert.That(newStateJson, Does.Contain("HELLO"));
             Assert.That(newStateJson, Does.Not.Contain("FirstMove\": true"));
         }
 

@@ -310,19 +310,26 @@ public class ScrabbleStateLogic : IGameStateLogic
 
         public IDictionary<string, long> CalculateScores(string currentStateJson)
         {
-            var state = JsonSerializer.Deserialize<ScrabbleState>(currentStateJson);
-            if (state == null) return new Dictionary<string, long>();
-            // Ensure board is properly initialized
-            if (state.Board == null || state.Board.Length != 15)
+            // Create a modified JSON that handles the Board as BoardTiles for compatibility
+            var tempState = JsonSerializer.Deserialize<TemporaryState>(currentStateJson);
+            if (tempState == null) return new Dictionary<string, long>();
+            
+            var state = new ScrabbleState();
+            state.Players = tempState.Players;
+            state.PlayerScores = tempState.PlayerScores;
+            state.CurrentPlayer = tempState.CurrentPlayer;
+            state.PlayerOrder = tempState.PlayerOrder;
+            state.FirstMove = tempState.FirstMove;
+            state.TileBag = tempState.TileBag;
+            
+            // Handle board initialization through BoardTiles property to convert the list format
+            if (tempState.BoardTiles != null && tempState.BoardTiles.Count > 0)
             {
-                state.Board = InitializeBoard();
+                state.BoardTiles = tempState.BoardTiles;
             }
-            for (int i = 0; i < 15; i++)
+            else if (tempState.Board != null && tempState.Board.Length > 0)
             {
-                if (state.Board[i] == null || state.Board[i].Length != 15)
-                {
-                    state.Board[i] = new string[15];
-                }
+                state.Board = tempState.Board;
             }
             
             var result = new Dictionary<string, long>();
@@ -334,6 +341,19 @@ public class ScrabbleStateLogic : IGameStateLogic
                     result[playerId] = 0;
             }
             return result;
+        }
+        
+        // Temporary class to handle deserialization of state with different board formats
+        private class TemporaryState
+        {
+            public string[][] Board { get; set; } = new string[0][];
+            public List<PlacedTile> BoardTiles { get; set; } = new List<PlacedTile>();
+            public List<PlayerInfo> Players { get; set; } = new List<PlayerInfo>();
+            public Dictionary<string, int> PlayerScores { get; set; } = new Dictionary<string, int>();
+            public string[] TileBag { get; set; } = new string[0];
+            public string CurrentPlayer { get; set; } = "";
+            public List<string> PlayerOrder { get; set; } = new List<string>();
+            public bool FirstMove { get; set; } = true;
         }
 
     }
