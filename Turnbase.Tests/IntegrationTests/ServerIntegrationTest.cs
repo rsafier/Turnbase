@@ -51,15 +51,13 @@ namespace Turnbase.Tests.IntegrationTests
                                app.UseEndpoints(endpoints =>
                                {
                                    endpoints.MapHub<GameHub>("/gamehub");
-                               });
-                               
-                               // Add API endpoints for testing
-                               app.MapPost("/api/games", async (GameContext db) =>
-                               {
-                                   var newGame = new GameState { StateJson = "{}", CreatedDate = DateTime.UtcNow };
-                                   db.GameStates.Add(newGame);
-                                   await db.SaveChangesAsync();
-                                   return Results.Ok(new { Id = newGame.Id });
+                                   endpoints.MapPost("/api/games", async (GameContext db) =>
+                                   {
+                                       var newGame = new GameState { StateJson = "{}", CreatedDate = DateTime.UtcNow };
+                                       db.GameStates.Add(newGame);
+                                       await db.SaveChangesAsync();
+                                       return Results.Ok(new { Id = newGame.Id });
+                                   });
                                });
                            });
                 });
