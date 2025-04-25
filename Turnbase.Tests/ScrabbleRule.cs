@@ -30,13 +30,23 @@ public class ScrabbleStateLogic : IGameStateLogic
         
         private class ScrabbleState
         {
-            public string[][] Board { get; set; } = new string[15][];
+            public string?[][] Board { get; set; } = InitializeBoard();
             public List<PlayerInfo> Players { get; set; } = new();
             public Dictionary<string, int> PlayerScores { get; set; } = new();
             public string[] TileBag { get; set; } = new string[0];
             public string CurrentPlayer { get; set; } = "";
             public List<string> PlayerOrder { get; set; } = new();
             public bool FirstMove { get; set; } = true;
+        }
+        
+        private static string?[][] InitializeBoard()
+        {
+            var board = new string?[15][];
+            for (int i = 0; i < 15; i++)
+            {
+                board[i] = new string?[15];
+            }
+            return board;
         }
 
         private class ScrabbleMove
@@ -140,7 +150,7 @@ public class ScrabbleStateLogic : IGameStateLogic
             }
             if (move.PlayerId != state.CurrentPlayer)
             {
-                error = "Not this player's turn.";
+                error = "Not your turn.";
                 return false;
             }
             if (move.Tiles.Count == 0)
@@ -159,7 +169,7 @@ public class ScrabbleStateLogic : IGameStateLogic
             {
                 if (!rack.Remove(tile.Letter))
                 {
-                    error = $"Player does not have tile '{tile.Letter}'.";
+                    error = $"Tile '{tile.Letter}' not in rack.";
                     return false;
                 }
                 if (tile.X < 0 || tile.X >= BoardSize || tile.Y < 0 || tile.Y >= BoardSize)
