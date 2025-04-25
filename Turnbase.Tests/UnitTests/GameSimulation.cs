@@ -195,8 +195,17 @@ namespace Turnbase.Tests.UnitTests
                 // First move must cover the center (7,7)
                 if (rack.Count >= 2)
                 {
+                    // Try to place a small word horizontally from center
                     move.Tiles.Add(new PlacedTile { Letter = rack[0], X = 7, Y = 7 });
                     move.Tiles.Add(new PlacedTile { Letter = rack[1], X = 8, Y = 7 });
+                    if (rack.Count >= 3)
+                    {
+                        move.Tiles.Add(new PlacedTile { Letter = rack[2], X = 9, Y = 7 });
+                    }
+                }
+                else if (rack.Count == 1)
+                {
+                    move.Tiles.Add(new PlacedTile { Letter = rack[0], X = 7, Y = 7 });
                 }
             }
             else
@@ -205,23 +214,76 @@ namespace Turnbase.Tests.UnitTests
                 var anchorPoints = FindAnchorPoints(state.Board);
                 if (anchorPoints.Count > 0 && rack.Count > 0)
                 {
-                    var anchor = anchorPoints[0]; // Simplistic: use first anchor
-                    // Place tile next to anchor, prefer horizontal
-                    int newX = anchor.X + 1;
-                    int newY = anchor.Y;
-                    if (newX < 15)
+                    // Try multiple anchor points for better placement
+                    foreach (var anchor in anchorPoints)
                     {
-                        move.Tiles.Add(new PlacedTile { Letter = rack[0], X = newX, Y = newY });
+                        // Try horizontal placement to the right
+                        if (anchor.X + 1 < 15 && state.Board[anchor.Y][anchor.X + 1] == null)
+                        {
+                            move.Tiles.Add(new PlacedTile { Letter = rack[0], X = anchor.X + 1, Y = anchor.Y });
+                            if (rack.Count > 1 && anchor.X + 2 < 15 && state.Board[anchor.Y][anchor.X + 2] == null)
+                            {
+                                move.Tiles.Add(new PlacedTile { Letter = rack[1], X = anchor.X + 2, Y = anchor.Y });
+                            }
+                            break;
+                        }
+                        // Try horizontal placement to the left
+                        else if (anchor.X - 1 >= 0 && state.Board[anchor.Y][anchor.X - 1] == null)
+                        {
+                            move.Tiles.Add(new PlacedTile { Letter = rack[0], X = anchor.X - 1, Y = anchor.Y });
+                            if (rack.Count > 1 && anchor.X - 2 >= 0 && state.Board[anchor.Y][anchor.X - 2] == null)
+                            {
+                                move.Tiles.Add(new PlacedTile { Letter = rack[1], X = anchor.X - 2, Y = anchor.Y });
+                            }
+                            break;
+                        }
+                        // Try vertical placement below
+                        else if (anchor.Y + 1 < 15 && state.Board[anchor.Y + 1][anchor.X] == null)
+                        {
+                            move.Tiles.Add(new PlacedTile { Letter = rack[0], X = anchor.X, Y = anchor.Y + 1 });
+                            if (rack.Count > 1 && anchor.Y + 2 < 15 && state.Board[anchor.Y + 2][anchor.X] == null)
+                            {
+                                move.Tiles.Add(new PlacedTile { Letter = rack[1], X = anchor.X, Y = anchor.Y + 2 });
+                            }
+                            break;
+                        }
+                        // Try vertical placement above
+                        else if (anchor.Y - 1 >= 0 && state.Board[anchor.Y - 1][anchor.X] == null)
+                        {
+                            move.Tiles.Add(new PlacedTile { Letter = rack[0], X = anchor.X, Y = anchor.Y - 1 });
+                            if (rack.Count > 1 && anchor.Y - 2 >= 0 && state.Board[anchor.Y - 2][anchor.X] == null)
+                            {
+                                move.Tiles.Add(new PlacedTile { Letter = rack[1], X = anchor.X, Y = anchor.Y - 2 });
+                            }
+                            break;
+                        }
                     }
-                    else if (anchor.Y + 1 < 15)
+                    // If no placement found, fall back to first anchor
+                    if (move.Tiles.Count == 0)
                     {
-                        move.Tiles.Add(new PlacedTile { Letter = rack[0], X = anchor.X, Y = anchor.Y + 1 });
+                        var anchor = anchorPoints[0];
+                        if (anchor.X + 1 < 15 && state.Board[anchor.Y][anchor.X + 1] == null)
+                        {
+                            move.Tiles.Add(new PlacedTile { Letter = rack[0], X = anchor.X + 1, Y = anchor.Y });
+                        }
+                        else if (anchor.Y + 1 < 15 && state.Board[anchor.Y + 1][anchor.X] == null)
+                        {
+                            move.Tiles.Add(new PlacedTile { Letter = rack[0], X = anchor.X, Y = anchor.Y + 1 });
+                        }
                     }
                 }
                 else if (rack.Count > 0)
                 {
-                    // If no anchors (shouldn't happen after first move), place randomly
-                    move.Tiles.Add(new PlacedTile { Letter = rack[0], X = 7, Y = 7 });
+                    // If no anchors (shouldn't happen after first move), place near center
+                    int startX = 7, startY = 7;
+                    while (startY < 15 && state.Board[startY][startX] != null)
+                    {
+                        startY++;
+                    }
+                    if (startY < 15)
+                    {
+                        move.Tiles.Add(new PlacedTile { Letter = rack[0], X = startX, Y = startY });
+                    }
                 }
             }
 
