@@ -383,14 +383,14 @@ namespace Turnbase.Tests.UnitTests
             var updatedState2 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player1", updatedState2.CurrentPlayer);
 
-            // Move 3: Player 1 plays "BAD" horizontally connecting to 'L' in "HELLO" at position (9,7) to form "LAD"
+            // Move 3: Player 1 plays "LAB" vertically connecting to 'L' in "HELLO" at position (9,7) to form "LAB"
             var move3 = new ScrabbleMove
             {
                 PlayerId = "player1",
                 Tiles = new List<PlacedTile>
                 {
-                    new PlacedTile { Letter = "A", X = 8, Y = 9 },
-                    new PlacedTile { Letter = "D", X = 8, Y = 10 }
+                    new PlacedTile { Letter = "A", X = 9, Y = 8 },
+                    new PlacedTile { Letter = "B", X = 9, Y = 9 }
                 }
             };
             string move3Json = JsonSerializer.Serialize(move3);
@@ -423,16 +423,16 @@ namespace Turnbase.Tests.UnitTests
             // Move 5: Player 1 plays a new word using drawn tiles (assuming they drew usable letters)
             // For simplicity, assume player1's rack now has usable letters after draw
             var updatedPlayer1 = updatedState4.Players.Find(p => p.Id == "player1");
-            updatedPlayer1.Rack = new[] { "P", "E", "N" }; // Simulate drawn tiles to form "PEN"
+            updatedPlayer1.Rack = new[] { "P", "A", "R" }; // Simulate drawn tiles to form "PAR"
             stateJson = JsonSerializer.Serialize(updatedState4);
             var move5 = new ScrabbleMove
             {
                 PlayerId = "player1",
                 Tiles = new List<PlacedTile>
                 {
-                    new PlacedTile { Letter = "P", X = 7, Y = 8 },
-                    new PlacedTile { Letter = "E", X = 7, Y = 9 },
-                    new PlacedTile { Letter = "N", X = 7, Y = 10 }
+                    new PlacedTile { Letter = "P", X = 10, Y = 8 },
+                    new PlacedTile { Letter = "A", X = 10, Y = 9 },
+                    new PlacedTile { Letter = "R", X = 10, Y = 10 }
                 }
             };
             string move5Json = JsonSerializer.Serialize(move5);
