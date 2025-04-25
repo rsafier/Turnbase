@@ -383,14 +383,15 @@ namespace Turnbase.Tests.UnitTests
             var updatedState2 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player1", updatedState2.CurrentPlayer);
 
-            // Move 3: Player 1 plays "LAB" vertically connecting to 'L' in "HELLO" at position (9,7) to form "LAB"
+            // Move 3: Player 1 plays "AID" vertically connecting to 'L' in "HELLO" at position (9,7) to form "LAID"
             var move3 = new ScrabbleMove
             {
                 PlayerId = "player1",
                 Tiles = new List<PlacedTile>
                 {
                     new PlacedTile { Letter = "A", X = 9, Y = 8 },
-                    new PlacedTile { Letter = "B", X = 9, Y = 9 }
+                    new PlacedTile { Letter = "I", X = 9, Y = 9 },
+                    new PlacedTile { Letter = "D", X = 9, Y = 10 }
                 }
             };
             string move3Json = JsonSerializer.Serialize(move3);
@@ -401,15 +402,14 @@ namespace Turnbase.Tests.UnitTests
             var updatedState3 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player2", updatedState3.CurrentPlayer);
 
-            // Move 4: Player 2 plays "GIN" vertically connecting to 'G' in their rack and 'N' to form a word
+            // Move 4: Player 2 plays "NET" horizontally connecting to 'E' in "TEST" at position (8,7)
             var move4 = new ScrabbleMove
             {
                 PlayerId = "player2",
                 Tiles = new List<PlacedTile>
                 {
-                    new PlacedTile { Letter = "G", X = 9, Y = 8 },
-                    new PlacedTile { Letter = "I", X = 9, Y = 9 },
-                    new PlacedTile { Letter = "N", X = 9, Y = 10 }
+                    new PlacedTile { Letter = "N", X = 12, Y = 7 },
+                    new PlacedTile { Letter = "T", X = 13, Y = 7 }
                 }
             };
             string move4Json = JsonSerializer.Serialize(move4);
@@ -423,7 +423,7 @@ namespace Turnbase.Tests.UnitTests
             // Move 5: Player 1 plays a new word using drawn tiles (assuming they drew usable letters)
             // For simplicity, assume player1's rack now has usable letters after draw
             var updatedPlayer1 = updatedState4.Players.Find(p => p.Id == "player1");
-            updatedPlayer1.Rack = new[] { "P", "A", "R" }; // Simulate drawn tiles to form "PAR"
+            updatedPlayer1.Rack = new[] { "P", "I", "N" }; // Simulate drawn tiles to form "PIN"
             stateJson = JsonSerializer.Serialize(updatedState4);
             var move5 = new ScrabbleMove
             {
@@ -431,8 +431,8 @@ namespace Turnbase.Tests.UnitTests
                 Tiles = new List<PlacedTile>
                 {
                     new PlacedTile { Letter = "P", X = 10, Y = 8 },
-                    new PlacedTile { Letter = "A", X = 10, Y = 9 },
-                    new PlacedTile { Letter = "R", X = 10, Y = 10 }
+                    new PlacedTile { Letter = "I", X = 11, Y = 8 },
+                    new PlacedTile { Letter = "N", X = 12, Y = 8 }
                 }
             };
             string move5Json = JsonSerializer.Serialize(move5);
