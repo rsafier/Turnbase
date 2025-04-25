@@ -127,7 +127,7 @@ namespace Turnbase.Tests.IntegrationTests
             Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
             var content = await response.Content.ReadAsStringAsync();
             Assert.That(content, Is.Not.Empty);
-            Assert.That(content, Does.Contain("Id"));
+            Assert.That(content, Does.Contain("id"));
         }
     }
 }
