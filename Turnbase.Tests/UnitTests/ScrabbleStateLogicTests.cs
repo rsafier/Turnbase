@@ -1,6 +1,8 @@
 using NUnit.Framework;
 using Turnbase.Rules;
 using System.Collections.Generic;
+using System.Text.Json;
+using System.Linq;
 
 namespace Turnbase.Tests.UnitTests
 {
@@ -8,6 +10,69 @@ namespace Turnbase.Tests.UnitTests
     public class ScrabbleStateLogicTests
     {
         private ScrabbleStateLogic _logic;
+
+        // Define the state and move classes as they are in ScrabbleStateLogic
+        private class PlayerInfo
+        {
+            public string Id { get; set; } = "";
+            public string[] Rack { get; set; } = new string[0];
+        }
+
+        private class ScrabbleState
+        {
+            private string[][] _board = InitializeBoard();
+            public string[][] Board
+            {
+                get => _board;
+                set => _board = value ?? InitializeBoard();
+            }
+            public List<PlayerInfo> Players { get; set; } = new();
+            public Dictionary<string, int> PlayerScores { get; set; } = new();
+            public string[] TileBag { get; set; } = new string[0];
+            public string CurrentPlayer { get; set; } = "";
+            public List<string> PlayerOrder { get; set; } = new();
+            public bool FirstMove { get; set; } = true;
+            public List<PlacedTile> BoardTiles
+            {
+                set
+                {
+                    if (value != null && value.Count > 0)
+                    {
+                        _board = InitializeBoard();
+                        foreach (var tile in value)
+                        {
+                            if (tile.X >= 0 && tile.X < 15 && tile.Y >= 0 && tile.Y < 15)
+                            {
+                                _board[tile.Y][tile.X] = tile.Letter;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private static string[][] InitializeBoard()
+        {
+            var board = new string[15][];
+            for (int i = 0; i < 15; i++)
+            {
+                board[i] = new string[15];
+            }
+            return board;
+        }
+
+        private class ScrabbleMove
+        {
+            public string PlayerId { get; set; } = "";
+            public List<PlacedTile> Tiles { get; set; } = new();
+        }
+
+        private class PlacedTile
+        {
+            public int X { get; set; }
+            public int Y { get; set; }
+            public string Letter { get; set; } = "";
+        }
 
         [SetUp]
         public void Setup()
@@ -18,27 +83,33 @@ namespace Turnbase.Tests.UnitTests
         [Test]
         public void ValidateMove_ValidFirstMove_ReturnsTrue()
         {
-            string currentStateJson = @"{
-                ""Board"": [],
-                ""Players"": [
-                    { ""Id"": ""player1"", ""Rack"": [""H"", ""E"", ""L"", ""L"", ""O"", ""A"", ""B""] }
-                ],
-                ""CurrentPlayer"": ""player1"",
-                ""FirstMove"": true
-            }";
+            var state = new ScrabbleState
+            {
+                Players = new List<PlayerInfo>
+                {
+                    new PlayerInfo { Id = "player1", Rack = new[] { "H", "E", "L", "L", "O", "A", "B" } }
+                },
+                CurrentPlayer = "player1",
+                FirstMove = true
+            };
 
-            string moveJson = @"{
-                ""PlayerId"": ""player1"",
-                ""Tiles"": [
-                    { ""Letter"": ""H"", ""X"": 7, ""Y"": 7 },
-                    { ""Letter"": ""E"", ""X"": 8, ""Y"": 7 },
-                    { ""Letter"": ""L"", ""X"": 9, ""Y"": 7 },
-                    { ""Letter"": ""L"", ""X"": 10, ""Y"": 7 },
-                    { ""Letter"": ""O"", ""X"": 11, ""Y"": 7 }
-                ]
-            }";
+            var move = new ScrabbleMove
+            {
+                PlayerId = "player1",
+                Tiles = new List<PlacedTile>
+                {
+                    new PlacedTile { Letter = "H", X = 7, Y = 7 },
+                    new PlacedTile { Letter = "E", X = 8, Y = 7 },
+                    new PlacedTile { Letter = "L", X = 9, Y = 7 },
+                    new PlacedTile { Letter = "L", X = 10, Y = 7 },
+                    new PlacedTile { Letter = "O", X = 11, Y = 7 }
+                }
+            };
 
-            bool result = _logic.ValidateMove(currentStateJson, moveJson, out string? error);
+            string stateJson = JsonSerializer.Serialize(state);
+            string moveJson = JsonSerializer.Serialize(move);
+
+            bool result = _logic.ValidateMove(stateJson, moveJson, out string? error);
 
             Assert.IsTrue(result, error);
             Assert.IsNull(error);
@@ -47,24 +118,30 @@ namespace Turnbase.Tests.UnitTests
         [Test]
         public void ValidateMove_FirstMoveNotOnCenter_ReturnsFalse()
         {
-            string currentStateJson = @"{
-                ""Board"": [],
-                ""Players"": [
-                    { ""Id"": ""player1"", ""Rack"": [""H"", ""E"", ""L"", ""L"", ""O"", ""A"", ""B""] }
-                ],
-                ""CurrentPlayer"": ""player1"",
-                ""FirstMove"": true
-            }";
+            var state = new ScrabbleState
+            {
+                Players = new List<PlayerInfo>
+                {
+                    new PlayerInfo { Id = "player1", Rack = new[] { "H", "E", "L", "L", "O", "A", "B" } }
+                },
+                CurrentPlayer = "player1",
+                FirstMove = true
+            };
 
-            string moveJson = @"{
-                ""PlayerId"": ""player1"",
-                ""Tiles"": [
-                    { ""Letter"": ""H"", ""X"": 0, ""Y"": 0 },
-                    { ""Letter"": ""E"", ""X"": 1, ""Y"": 0 }
-                ]
-            }";
+            var move = new ScrabbleMove
+            {
+                PlayerId = "player1",
+                Tiles = new List<PlacedTile>
+                {
+                    new PlacedTile { Letter = "H", X = 0, Y = 0 },
+                    new PlacedTile { Letter = "E", X = 1, Y = 0 }
+                }
+            };
 
-            bool result = _logic.ValidateMove(currentStateJson, moveJson, out string? error);
+            string stateJson = JsonSerializer.Serialize(state);
+            string moveJson = JsonSerializer.Serialize(move);
+
+            bool result = _logic.ValidateMove(stateJson, moveJson, out string? error);
 
             Assert.IsFalse(result);
             Assert.IsNotNull(error);
@@ -74,24 +151,30 @@ namespace Turnbase.Tests.UnitTests
         [Test]
         public void ValidateMove_InvalidWord_ReturnsFalse()
         {
-            string currentStateJson = @"{
-                ""Board"": [],
-                ""Players"": [
-                    { ""Id"": ""player1"", ""Rack"": [""Q"", ""Z"", ""X"", ""Y"", ""P"", ""A"", ""B""] }
-                ],
-                ""CurrentPlayer"": ""player1"",
-                ""FirstMove"": true
-            }";
+            var state = new ScrabbleState
+            {
+                Players = new List<PlayerInfo>
+                {
+                    new PlayerInfo { Id = "player1", Rack = new[] { "Q", "Z", "X", "Y", "P", "A", "B" } }
+                },
+                CurrentPlayer = "player1",
+                FirstMove = true
+            };
 
-            string moveJson = @"{
-                ""PlayerId"": ""player1"",
-                ""Tiles"": [
-                    { ""Letter"": ""Q"", ""X"": 7, ""Y"": 7 },
-                    { ""Letter"": ""Z"", ""X"": 8, ""Y"": 7 }
-                ]
-            }";
+            var move = new ScrabbleMove
+            {
+                PlayerId = "player1",
+                Tiles = new List<PlacedTile>
+                {
+                    new PlacedTile { Letter = "Q", X = 7, Y = 7 },
+                    new PlacedTile { Letter = "Z", X = 8, Y = 7 }
+                }
+            };
 
-            bool result = _logic.ValidateMove(currentStateJson, moveJson, out string? error);
+            string stateJson = JsonSerializer.Serialize(state);
+            string moveJson = JsonSerializer.Serialize(move);
+
+            bool result = _logic.ValidateMove(stateJson, moveJson, out string? error);
 
             Assert.IsFalse(result);
             Assert.IsNotNull(error);
@@ -101,25 +184,31 @@ namespace Turnbase.Tests.UnitTests
         [Test]
         public void ValidateMove_NotCurrentPlayer_ReturnsFalse()
         {
-            string currentStateJson = @"{
-                ""Board"": [],
-                ""Players"": [
-                    { ""Id"": ""player1"", ""Rack"": [""H"", ""E"", ""L"", ""L"", ""O"", ""A"", ""B""] },
-                    { ""Id"": ""player2"", ""Rack"": [""T"", ""E"", ""S"", ""T"", ""I"", ""N"", ""G""] }
-                ],
-                ""CurrentPlayer"": ""player1"",
-                ""FirstMove"": true
-            }";
+            var state = new ScrabbleState
+            {
+                Players = new List<PlayerInfo>
+                {
+                    new PlayerInfo { Id = "player1", Rack = new[] { "H", "E", "L", "L", "O", "A", "B" } },
+                    new PlayerInfo { Id = "player2", Rack = new[] { "T", "E", "S", "T", "I", "N", "G" } }
+                },
+                CurrentPlayer = "player1",
+                FirstMove = true
+            };
 
-            string moveJson = @"{
-                ""PlayerId"": ""player2"",
-                ""Tiles"": [
-                    { ""Letter"": ""T"", ""X"": 7, ""Y"": 7 },
-                    { ""Letter"": ""E"", ""X"": 8, ""Y"": 7 }
-                ]
-            }";
+            var move = new ScrabbleMove
+            {
+                PlayerId = "player2",
+                Tiles = new List<PlacedTile>
+                {
+                    new PlacedTile { Letter = "T", X = 7, Y = 7 },
+                    new PlacedTile { Letter = "E", X = 8, Y = 7 }
+                }
+            };
 
-            bool result = _logic.ValidateMove(currentStateJson, moveJson, out string? error);
+            string stateJson = JsonSerializer.Serialize(state);
+            string moveJson = JsonSerializer.Serialize(move);
+
+            bool result = _logic.ValidateMove(stateJson, moveJson, out string? error);
 
             Assert.IsFalse(result);
             Assert.IsNotNull(error);
@@ -129,24 +218,30 @@ namespace Turnbase.Tests.UnitTests
         [Test]
         public void ValidateMove_TilesNotInRack_ReturnsFalse()
         {
-            string currentStateJson = @"{
-                ""Board"": [],
-                ""Players"": [
-                    { ""Id"": ""player1"", ""Rack"": [""A"", ""B"", ""C"", ""D"", ""E"", ""F"", ""G""] }
-                ],
-                ""CurrentPlayer"": ""player1"",
-                ""FirstMove"": true
-            }";
+            var state = new ScrabbleState
+            {
+                Players = new List<PlayerInfo>
+                {
+                    new PlayerInfo { Id = "player1", Rack = new[] { "A", "B", "C", "D", "E", "F", "G" } }
+                },
+                CurrentPlayer = "player1",
+                FirstMove = true
+            };
 
-            string moveJson = @"{
-                ""PlayerId"": ""player1"",
-                ""Tiles"": [
-                    { ""Letter"": ""H"", ""X"": 7, ""Y"": 7 },
-                    { ""Letter"": ""I"", ""X"": 8, ""Y"": 7 }
-                ]
-            }";
+            var move = new ScrabbleMove
+            {
+                PlayerId = "player1",
+                Tiles = new List<PlacedTile>
+                {
+                    new PlacedTile { Letter = "H", X = 7, Y = 7 },
+                    new PlacedTile { Letter = "I", X = 8, Y = 7 }
+                }
+            };
 
-            bool result = _logic.ValidateMove(currentStateJson, moveJson, out string? error);
+            string stateJson = JsonSerializer.Serialize(state);
+            string moveJson = JsonSerializer.Serialize(move);
+
+            bool result = _logic.ValidateMove(stateJson, moveJson, out string? error);
 
             Assert.IsFalse(result);
             Assert.IsNotNull(error);
@@ -156,28 +251,34 @@ namespace Turnbase.Tests.UnitTests
         [Test]
         public void ApplyMove_ValidMove_UpdatesState()
         {
-            string currentStateJson = @"{
-                ""Board"": [],
-                ""Players"": [
-                    { ""Id"": ""player1"", ""Rack"": [""H"", ""E"", ""L"", ""L"", ""O"", ""A"", ""B""] },
-                    { ""Id"": ""player2"", ""Rack"": [""T"", ""E"", ""S"", ""T"", ""I"", ""N"", ""G""] }
-                ],
-                ""CurrentPlayer"": ""player1"",
-                ""FirstMove"": true
-            }";
+            var state = new ScrabbleState
+            {
+                Players = new List<PlayerInfo>
+                {
+                    new PlayerInfo { Id = "player1", Rack = new[] { "H", "E", "L", "L", "O", "A", "B" } },
+                    new PlayerInfo { Id = "player2", Rack = new[] { "T", "E", "S", "T", "I", "N", "G" } }
+                },
+                CurrentPlayer = "player1",
+                FirstMove = true
+            };
 
-            string moveJson = @"{
-                ""PlayerId"": ""player1"",
-                ""Tiles"": [
-                    { ""Letter"": ""H"", ""X"": 7, ""Y"": 7 },
-                    { ""Letter"": ""E"", ""X"": 8, ""Y"": 7 },
-                    { ""Letter"": ""L"", ""X"": 9, ""Y"": 7 },
-                    { ""Letter"": ""L"", ""X"": 10, ""Y"": 7 },
-                    { ""Letter"": ""O"", ""X"": 11, ""Y"": 7 }
-                ]
-            }";
+            var move = new ScrabbleMove
+            {
+                PlayerId = "player1",
+                Tiles = new List<PlacedTile>
+                {
+                    new PlacedTile { Letter = "H", X = 7, Y = 7 },
+                    new PlacedTile { Letter = "E", X = 8, Y = 7 },
+                    new PlacedTile { Letter = "L", X = 9, Y = 7 },
+                    new PlacedTile { Letter = "L", X = 10, Y = 7 },
+                    new PlacedTile { Letter = "O", X = 11, Y = 7 }
+                }
+            };
 
-            string newStateJson = _logic.ApplyMove(currentStateJson, moveJson, out string? error);
+            string stateJson = JsonSerializer.Serialize(state);
+            string moveJson = JsonSerializer.Serialize(move);
+
+            string newStateJson = _logic.ApplyMove(stateJson, moveJson, out string? error);
 
             Assert.IsNull(error);
             Assert.IsNotNull(newStateJson);
@@ -188,25 +289,31 @@ namespace Turnbase.Tests.UnitTests
         [Test]
         public void CalculateScores_ReturnsCorrectScores()
         {
-            string currentStateJson = @"{
-                ""BoardTiles"": [
-                    { ""Letter"": ""H"", ""X"": 7, ""Y"": 7 },
-                    { ""Letter"": ""E"", ""X"": 8, ""Y"": 7 },
-                    { ""Letter"": ""L"", ""X"": 9, ""Y"": 7 },
-                    { ""Letter"": ""L"", ""X"": 10, ""Y"": 7 },
-                    { ""Letter"": ""O"", ""X"": 11, ""Y"": 7 }
-                ],
-                ""Players"": [
-                    { ""Id"": ""player1"", ""Rack"": [""A"", ""B""] },
-                    { ""Id"": ""player2"", ""Rack"": [""T"", ""E"", ""S"", ""T"", ""I"", ""N"", ""G""] }
-                ],
-                ""CurrentPlayer"": ""player2"",
-                ""FirstMove"": false,
-                ""PlayerOrder"": [""player1"", ""player2""],
-                ""PlayerScores"": { ""player1"": 8 }
-            }";
+            var state = new ScrabbleState
+            {
+                Players = new List<PlayerInfo>
+                {
+                    new PlayerInfo { Id = "player1", Rack = new[] { "A", "B" } },
+                    new PlayerInfo { Id = "player2", Rack = new[] { "T", "E", "S", "T", "I", "N", "G" } }
+                },
+                CurrentPlayer = "player2",
+                FirstMove = false,
+                PlayerOrder = new List<string> { "player1", "player2" },
+                PlayerScores = new Dictionary<string, int> { { "player1", 8 } }
+            };
 
-            IDictionary<string, long> scores = _logic.CalculateScores(currentStateJson);
+            state.BoardTiles = new List<PlacedTile>
+            {
+                new PlacedTile { Letter = "H", X = 7, Y = 7 },
+                new PlacedTile { Letter = "E", X = 8, Y = 7 },
+                new PlacedTile { Letter = "L", X = 9, Y = 7 },
+                new PlacedTile { Letter = "L", X = 10, Y = 7 },
+                new PlacedTile { Letter = "O", X = 11, Y = 7 }
+            };
+
+            string stateJson = JsonSerializer.Serialize(state);
+
+            IDictionary<string, long> scores = _logic.CalculateScores(stateJson);
 
             Assert.IsNotNull(scores);
             Assert.That(scores, Contains.Key("player1"));
