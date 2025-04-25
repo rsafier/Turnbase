@@ -47,11 +47,19 @@ namespace Turnbase.Tests.IntegrationTests
                            .Configure(app =>
                            {
                                // Configure the app as in Program.cs
-                               app.UseHttpsRedirection();
                                app.UseRouting();
                                app.UseEndpoints(endpoints =>
                                {
                                    endpoints.MapHub<GameHub>("/gamehub");
+                               });
+                               
+                               // Add API endpoints for testing
+                               app.MapPost("/api/games", async (GameContext db) =>
+                               {
+                                   var newGame = new GameState { StateJson = "{}", CreatedDate = DateTime.UtcNow };
+                                   db.GameStates.Add(newGame);
+                                   await db.SaveChangesAsync();
+                                   return Results.Ok(new { Id = newGame.Id });
                                });
                            });
                 });
@@ -75,7 +83,10 @@ namespace Turnbase.Tests.IntegrationTests
         {
             // Arrange
             var connection = new HubConnectionBuilder()
-                .WithUrl("http://localhost:5000/gamehub")
+                .WithUrl("http://localhost:5000/gamehub", options => 
+                {
+                    options.HttpMessageHandlerFactory = _ => _server.CreateHandler();
+                })
                 .Build();
 
             // Act
