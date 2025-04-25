@@ -94,6 +94,25 @@ namespace Turnbase.Tests.UnitTests
         public void Setup()
         {
             _logic = new ScrabbleStateLogic();
+            // Load dictionary words
+            if (DictionaryWords.Count == 0)
+            {
+                string dictionaryPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "../../dictionary.csv");
+                if (File.Exists(dictionaryPath))
+                {
+                    foreach (var line in File.ReadAllLines(dictionaryPath))
+                    {
+                        if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            DictionaryWords.Add(line.Trim().ToUpper());
+                        }
+                    }
+                }
+                else
+                {
+                    TestContext.WriteLine("Dictionary file not found, using empty dictionary.");
+                }
+            }
         }
 
         [Test]
@@ -189,31 +208,6 @@ namespace Turnbase.Tests.UnitTests
         }
 
         private static HashSet<string> DictionaryWords { get; set; } = new HashSet<string>();
-
-        [SetUp]
-        public void Setup()
-        {
-            _logic = new ScrabbleStateLogic();
-            // Load dictionary words
-            if (DictionaryWords.Count == 0)
-            {
-                string dictionaryPath = Path.Combine(TestContext.CurrentContext.TestDirectory, "../../dictionary.csv");
-                if (File.Exists(dictionaryPath))
-                {
-                    foreach (var line in File.ReadAllLines(dictionaryPath))
-                    {
-                        if (!string.IsNullOrWhiteSpace(line))
-                        {
-                            DictionaryWords.Add(line.Trim().ToUpper());
-                        }
-                    }
-                }
-                else
-                {
-                    TestContext.WriteLine("Dictionary file not found, using empty dictionary.");
-                }
-            }
-        }
 
         private ScrabbleMove GenerateMove(ScrabbleState state, string playerId, HashSet<string> failedCombinations)
         {
