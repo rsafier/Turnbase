@@ -26,14 +26,14 @@ builder.Services.AddSingleton<IGameStateLogic, ScrabbleStateLogic>();
 builder.Services.AddSingleton<FairnessService>();
 
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
- //   app.UseSwagger();
- //   app.UseSwaggerUI();
+ app.UseSwagger();
+ app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();

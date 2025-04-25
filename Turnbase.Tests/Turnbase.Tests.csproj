@@ -11,10 +11,7 @@
         <Content Include="../dictionary.csv">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
-    </ItemGroup>
-    <ItemGroup>
-        <Compile Include="**/*.cs" Exclude="obj/**" />
-    </ItemGroup>
+    </ItemGroup> 
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.0"/>
