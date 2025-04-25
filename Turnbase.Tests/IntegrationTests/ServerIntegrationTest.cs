@@ -56,7 +56,8 @@ namespace Turnbase.Tests.IntegrationTests
                                    {
                                        var game = new Game { 
                                            CreatedDate = DateTime.UtcNow,
-                                           GameTypeName = "Scrabble"
+                                           GameTypeName = "Scrabble",
+                                           GameName = "Test Game"
                                        };
                                        db.Games.Add(game);
                                        await db.SaveChangesAsync();
