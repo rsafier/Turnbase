@@ -133,7 +133,7 @@ namespace Turnbase.Tests.UnitTests
                 TileBag = InitialTileBag.ToArray()
             };
 
-            // Distribute initial tiles to players
+            // Distribute initial tiles to players with randomization
             state = DistributeInitialTiles(state);
 
             string stateJson = JsonSerializer.Serialize(state);
@@ -194,6 +194,10 @@ namespace Turnbase.Tests.UnitTests
 
         private ScrabbleState DistributeInitialTiles(ScrabbleState state)
         {
+            var random = new Random();
+            var shuffledBag = state.TileBag.OrderBy(_ => random.Next()).ToArray();
+            state.TileBag = shuffledBag;
+
             foreach (var player in state.Players)
             {
                 var rack = new List<string>();
