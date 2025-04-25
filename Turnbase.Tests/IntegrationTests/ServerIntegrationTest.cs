@@ -66,6 +66,13 @@ namespace Turnbase.Tests.IntegrationTests
             _host = await builder.StartAsync();
             _server = _host.GetTestServer();
             _client = _host.GetTestClient();
+            
+            // Ensure database is created
+            using (var scope = _host.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<GameContext>();
+                await db.Database.EnsureCreatedAsync();
+            }
         }
 
         [TearDown]
