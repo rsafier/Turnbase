@@ -3,7 +3,6 @@ using Turnbase.Server.GameLogic;
 
 namespace Turnbase.Rules
 {
-    
 
 public class ScrabbleStateLogic : IGameStateLogic
     {
@@ -42,6 +41,24 @@ public class ScrabbleStateLogic : IGameStateLogic
             public string CurrentPlayer { get; set; } = "";
             public List<string> PlayerOrder { get; set; } = new();
             public bool FirstMove { get; set; } = true;
+            // For compatibility with test data
+            public List<PlacedTile> BoardTiles 
+            { 
+                set 
+                {
+                    if (value != null && value.Count > 0)
+                    {
+                        _board = InitializeBoard();
+                        foreach (var tile in value)
+                        {
+                            if (tile.X >= 0 && tile.X < 15 && tile.Y >= 0 && tile.Y < 15)
+                            {
+                                _board[tile.Y][tile.X] = tile.Letter;
+                            }
+                        }
+                    }
+                }
+            }
         }
         
         private static string[][] InitializeBoard()
@@ -227,7 +244,7 @@ public class ScrabbleStateLogic : IGameStateLogic
             {
                 if (!Dictionary.Contains(w.ToUpper()))
                 {
-                    error = $"Word '{w}' not in dictionary.";
+                    error = $"invalid word: '{w}' not in dictionary.";
                     return false;
                 }
             }
@@ -278,8 +295,15 @@ public class ScrabbleStateLogic : IGameStateLogic
                 state.PlayerScores[move.PlayerId] = 0;
             state.PlayerScores[move.PlayerId] += score;
             // Advance turn
+            if (state.PlayerOrder.Count == 0)
+            {
+                state.PlayerOrder = state.Players.Select(p => p.Id).ToList();
+            }
             var idx = state.PlayerOrder.IndexOf(state.CurrentPlayer);
-            state.CurrentPlayer = state.PlayerOrder[(idx + 1) % state.PlayerOrder.Count];
+            if (idx >= 0 && state.PlayerOrder.Count > 0)
+            {
+                state.CurrentPlayer = state.PlayerOrder[(idx + 1) % state.PlayerOrder.Count];
+            }
             state.FirstMove = false;
             return JsonSerializer.Serialize(state);
         }
