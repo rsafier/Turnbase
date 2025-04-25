@@ -12,6 +12,9 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
+    <ItemGroup>
+        <Compile Include="UnitTests/ScrabbleStateLogicTests.cs" />
+    </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.0"/>
