@@ -396,8 +396,17 @@ namespace Turnbase.Tests.UnitTests
             string rackStringMove3 = string.Join(", ", rackTilesMove3);
             TestContext.WriteLine($"Player 1 Rack for Move 3: [{rackStringMove3}]");
             
-            // Try to form a word with available tiles connecting to "L" at (9,7) downwards
-            if (rackTilesMove3.Count >= 2)
+            // Try to form a valid word with available tiles connecting to "L" at (9,7) downwards
+            // Assuming rack has A, B, A, R, M, P, D - try to form "LAD" which is a valid word
+            var letterA = rackTilesMove3.FirstOrDefault(t => t == "A");
+            var letterD = rackTilesMove3.FirstOrDefault(t => t == "D");
+            if (letterA != null && letterD != null)
+            {
+                move3.Tiles.Add(new PlacedTile { Letter = "A", X = 9, Y = 8 });
+                move3.Tiles.Add(new PlacedTile { Letter = "D", X = 9, Y = 9 });
+                TestContext.WriteLine($"Attempting move with tiles A at (9,8) and D at (9,9) to form 'LAD'");
+            }
+            else if (rackTilesMove3.Count >= 2)
             {
                 move3.Tiles.Add(new PlacedTile { Letter = rackTilesMove3[0], X = 9, Y = 8 });
                 move3.Tiles.Add(new PlacedTile { Letter = rackTilesMove3[1], X = 9, Y = 9 });
@@ -438,12 +447,13 @@ namespace Turnbase.Tests.UnitTests
             string rackStringMove4 = string.Join(", ", rackTilesMove4);
             TestContext.WriteLine($"Player 2 Rack for Move 4: [{rackStringMove4}]");
             
-            // Try to form a word with available tiles connecting to "O" at (11,7) to the right
-            if (rackTilesMove4.Count >= 2)
+            // Try to form a valid word with available tiles connecting to "O" at (11,7) to the right
+            // Assuming rack has E, I, N, G, C, K, Y - try to form "ON" which is a valid word
+            var letterN = rackTilesMove4.FirstOrDefault(t => t == "N");
+            if (letterN != null)
             {
-                move4.Tiles.Add(new PlacedTile { Letter = rackTilesMove4[0], X = 12, Y = 7 });
-                move4.Tiles.Add(new PlacedTile { Letter = rackTilesMove4[1], X = 13, Y = 7 });
-                TestContext.WriteLine($"Attempting move with tiles {rackTilesMove4[0]} at (12,7) and {rackTilesMove4[1]} at (13,7)");
+                move4.Tiles.Add(new PlacedTile { Letter = "N", X = 12, Y = 7 });
+                TestContext.WriteLine($"Attempting move with tile N at (12,7) to form 'ON'");
             }
             else if (rackTilesMove4.Count >= 1)
             {
@@ -469,7 +479,6 @@ namespace Turnbase.Tests.UnitTests
 
             // Move 5: Player 1 plays a new word using drawn tiles
             var updatedPlayer1 = updatedState4.Players.Find(p => p.Id == "player1");
-            // Use whatever tiles are in the rack that can form a valid word
             var rackTiles = updatedPlayer1.Rack.ToList();
             var move5 = new ScrabbleMove
             {
@@ -481,8 +490,17 @@ namespace Turnbase.Tests.UnitTests
             string rackString = string.Join(", ", rackTiles);
             TestContext.WriteLine($"Player 1 Rack for Move 5: [{rackString}]");
             
-            // Try to form a word with available tiles connecting to "L" at (10,7) to form a potential word downwards
-            if (rackTiles.Count >= 2)
+            // Try to form a valid word with available tiles connecting to "L" at (10,7) downwards
+            // Assuming rack might have B, R, M, P - try to form "LAP" if possible
+            var letterA = rackTiles.FirstOrDefault(t => t == "A");
+            var letterP = rackTiles.FirstOrDefault(t => t == "P");
+            if (letterA != null && letterP != null)
+            {
+                move5.Tiles.Add(new PlacedTile { Letter = "A", X = 10, Y = 8 });
+                move5.Tiles.Add(new PlacedTile { Letter = "P", X = 10, Y = 9 });
+                TestContext.WriteLine($"Attempting move with tiles A at (10,8) and P at (10,9) to form 'LAP'");
+            }
+            else if (rackTiles.Count >= 2)
             {
                 move5.Tiles.Add(new PlacedTile { Letter = rackTiles[0], X = 10, Y = 8 });
                 move5.Tiles.Add(new PlacedTile { Letter = rackTiles[1], X = 10, Y = 9 });
