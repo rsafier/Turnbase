@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
@@ -10,6 +11,9 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Turnbase.Server;
 using Turnbase.Server.Data;
+using Turnbase.Rules;
+using Turnbase.Server.Services;
+using Turnbase.Server.GameLogic;
 
 namespace Turnbase.Tests.IntegrationTests
 {
@@ -43,7 +47,11 @@ namespace Turnbase.Tests.IntegrationTests
                            {
                                // Configure the app as in Program.cs
                                app.UseHttpsRedirection();
-                               app.MapHub<GameHub>("/gamehub");
+                               app.UseRouting();
+                               app.UseEndpoints(endpoints =>
+                               {
+                                   endpoints.MapHub<GameHub>("/gamehub");
+                               });
                            });
                 });
 
@@ -66,7 +74,7 @@ namespace Turnbase.Tests.IntegrationTests
         {
             // Arrange
             var connection = new HubConnectionBuilder()
-                .WithUrl(new Uri(_client.BaseAddress, "/gamehub"))
+                .WithUrl(new Uri(_client.BaseAddress ?? new Uri("http://localhost"), "/gamehub"))
                 .Build();
 
             // Act
