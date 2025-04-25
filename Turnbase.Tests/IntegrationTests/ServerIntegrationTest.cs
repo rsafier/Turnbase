@@ -32,6 +32,7 @@ namespace Turnbase.Tests.IntegrationTests
                 .ConfigureWebHost(webHost =>
                 {
                     webHost.UseTestServer()
+                           .UseUrls("http://localhost:5000")
                            .ConfigureServices((context, services) =>
                            {
                                // Configure in-memory database for testing
@@ -74,7 +75,7 @@ namespace Turnbase.Tests.IntegrationTests
         {
             // Arrange
             var connection = new HubConnectionBuilder()
-                .WithUrl(new Uri(_client.BaseAddress ?? new Uri("http://localhost"), "/gamehub"))
+                .WithUrl("http://localhost:5000/gamehub")
                 .Build();
 
             // Act
@@ -97,6 +98,7 @@ namespace Turnbase.Tests.IntegrationTests
             Assert.That(response.StatusCode, Is.EqualTo(System.Net.HttpStatusCode.OK));
             var content = await response.Content.ReadAsStringAsync();
             Assert.That(content, Is.Not.Empty);
+            Assert.That(content, Does.Contain("Id"));
         }
     }
 }
