@@ -191,7 +191,7 @@ public class ScrabbleStateLogic : IGameStateLogic
             // Simulate board after move
             var tempBoard = state.Board.Select(row => row.ToArray()).ToArray();
             foreach (var tile in move.Tiles)
-                tempBoard[tile.Row][tile.Col] = tile.Letter;
+                tempBoard[tile.Y][tile.X] = tile.Letter;
             var words = FindWords(tempBoard, move.Tiles);
             if (words.Count == 0)
             {
