@@ -36,7 +36,7 @@ namespace Turnbase.Tests.IntegrationTests
                            {
                                // Configure in-memory database for testing
                                services.AddDbContext<GameContext>(options =>
-                                   options.UseInMemoryDatabase("TestDatabase"));
+                                   options.UseSqlite("DataSource=:memory:"));
                                
                                // Add other necessary services from Program.cs
                                services.AddSignalR();
