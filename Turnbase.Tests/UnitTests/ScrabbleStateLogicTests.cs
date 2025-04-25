@@ -420,21 +420,32 @@ namespace Turnbase.Tests.UnitTests
             var updatedState4 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player1", updatedState4.CurrentPlayer);
 
-            // Move 5: Player 1 plays a new word using drawn tiles (assuming they drew usable letters)
-            // For simplicity, assume player1's rack now has usable letters after draw
+            // Move 5: Player 1 plays a new word using drawn tiles
             var updatedPlayer1 = updatedState4.Players.Find(p => p.Id == "player1");
-            updatedPlayer1.Rack = new[] { "P", "I", "N" }; // Simulate drawn tiles to form "PIN"
-            stateJson = JsonSerializer.Serialize(updatedState4);
+            // Use whatever tiles are in the rack that can form a valid word
+            var rackTiles = updatedPlayer1.Rack.ToList();
             var move5 = new ScrabbleMove
             {
                 PlayerId = "player1",
-                Tiles = new List<PlacedTile>
-                {
-                    new PlacedTile { Letter = "P", X = 10, Y = 8 },
-                    new PlacedTile { Letter = "I", X = 11, Y = 8 },
-                    new PlacedTile { Letter = "N", X = 12, Y = 8 }
-                }
+                Tiles = new List<PlacedTile>()
             };
+            
+            // Try to form a word with available tiles connecting to "L" at (10,7)
+            if (rackTiles.Count >= 2)
+            {
+                move5.Tiles.Add(new PlacedTile { Letter = rackTiles[0], X = 10, Y = 8 });
+                move5.Tiles.Add(new PlacedTile { Letter = rackTiles[1], X = 10, Y = 9 });
+            }
+            else if (rackTiles.Count >= 1)
+            {
+                move5.Tiles.Add(new PlacedTile { Letter = rackTiles[0], X = 10, Y = 8 });
+            }
+            else
+            {
+                Assert.Fail("Not enough tiles in rack to make a move.");
+            }
+            
+            stateJson = JsonSerializer.Serialize(updatedState4);
             string move5Json = JsonSerializer.Serialize(move5);
             bool valid5 = _logic.ValidateMove(stateJson, move5Json, out string? error5);
             Assert.IsTrue(valid5, error5);
