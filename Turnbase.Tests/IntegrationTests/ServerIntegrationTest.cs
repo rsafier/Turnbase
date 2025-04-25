@@ -14,6 +14,7 @@ using Turnbase.Server.Data;
 using Turnbase.Rules;
 using Turnbase.Server.Services;
 using Turnbase.Server.GameLogic;
+using Turnbase.Server.Models;
 
 namespace Turnbase.Tests.IntegrationTests
 {
