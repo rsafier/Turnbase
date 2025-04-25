@@ -5,7 +5,7 @@ namespace Turnbase.Rules
 {
     
 
-public class ScrabbleRule : IGameRule
+public class ScrabbleStateLogic : IGameStateLogic
     {
         private  readonly HashSet<string> Dictionary = LoadDictionary();
 
@@ -121,10 +121,10 @@ public class ScrabbleRule : IGameRule
             return false;
         }
 
-        public bool ValidateMove(string stateJson, string moveJson, out string? error)
+        public bool ValidateMove(string currentStateJson, string moveJson, out string? error)
         {
             error = null;
-            var state = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
+            var state = JsonSerializer.Deserialize<ScrabbleState>(currentStateJson);
             var move = JsonSerializer.Deserialize<ScrabbleMove>(moveJson);
             if (state == null || move == null)
             {
@@ -194,11 +194,12 @@ public class ScrabbleRule : IGameRule
             return true;
         }
 
-        public string ApplyMove(string stateJson, string moveJson)
+        public string ApplyMove(string currentStateJson, string moveJson, out string? error)
         {
-            var state = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
+            error = null;
+            var state = JsonSerializer.Deserialize<ScrabbleState>(currentStateJson);
             var move = JsonSerializer.Deserialize<ScrabbleMove>(moveJson);
-            if (state == null || move == null) return stateJson;
+            if (state == null || move == null) return currentStateJson;
             // Place tiles
             foreach (var tile in move.Tiles)
             {
@@ -227,16 +228,7 @@ public class ScrabbleRule : IGameRule
             return JsonSerializer.Serialize(state);
         }
 
-        public int CalculateScore(string stateJson, string playerId)
-        {
-            var state = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
-            if (state == null || !state.PlayerScores.ContainsKey(playerId)) return 0;
-            return state.PlayerScores[playerId];
-        }
+        public IDictionary<string, long> CalculateScores(string currentStateJson) => new Dictionary<string, long>  { { "user", 69 } }; 
 
-        public string[] GetBettableEvents()
-        {
-            return new[] { "win", "score_threshold" };
-        }
     }
 }

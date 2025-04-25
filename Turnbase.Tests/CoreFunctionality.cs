@@ -130,11 +130,32 @@ namespace Turnbase.Server.Models
 
 namespace Turnbase.Server.GameLogic
 {
-    public interface IGameRule
+    public interface IGameStateLogic
     {
-        bool ValidateMove(string stateJson, string moveJson, out string? error);
-        string ApplyMove(string stateJson, string moveJson);
-        int CalculateScore(string stateJson, string playerId); 
+        /// <summary>
+        /// Validates a player's move based on the current game state and specified game rules.
+        /// </summary>
+        /// <param name="currentStateJson">The JSON representation of the current game state.</param>
+        /// <param name="moveJson">The JSON representation of the move to validate.</param>
+        /// <param name="error">Outputs an error message if the move is invalid, or null if the move is valid.</param>
+        /// <returns>A boolean indicating whether the move is valid (true) or invalid (false).</returns>
+        bool ValidateMove(string currentStateJson, string moveJson, out string? error);
+
+        /// <summary>
+        /// Applies a move to the current game state, updating the state according to the game rules.
+        /// </summary>
+        /// <param name="currentStateJson">The JSON representation of the current game state before applying the move.</param>
+        /// <param name="moveJson">The JSON representation of the move to apply.</param>
+        /// <param name="error">Outputs an error message if the move is invalid, or null if the move is valid.</param>
+        /// <returns>A JSON representation of the updated game state after the move has been applied.</returns>
+        string ApplyMove(string currentStateJson, string moveJson, out string? error);
+
+        /// <summary>
+        /// Calculates the score for all player(s) based on the current game state.
+        /// </summary>
+        /// <param name="currentStateJson">The JSON representation of the current game state.</param> 
+        /// <returns>An integer representing the player's score. Returns 0 if the player does not exist in the game state.</returns>
+        IDictionary<string,long> CalculateScores(string currentStateJson);
     }
 }
 

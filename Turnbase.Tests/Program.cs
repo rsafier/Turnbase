@@ -22,7 +22,7 @@ builder.Host.UseSerilog();
 // Add services to the container.
 builder.Services.AddSignalR();
 builder.Services.AddDbContext<GameContext>();
-builder.Services.AddSingleton<IGameRule, ScrabbleRule>();
+builder.Services.AddSingleton<IGameStateLogic, ScrabbleStateLogic>();
 builder.Services.AddSingleton<FairnessService>();
 
 builder.Services.AddEndpointsApiExplorer();
