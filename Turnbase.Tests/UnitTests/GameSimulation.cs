@@ -12,6 +12,7 @@ namespace Turnbase.Tests.UnitTests
     public class GameSimulationTests
     {
         private ScrabbleStateLogic _logic;
+        private static HashSet<string> FailedCombinations { get; set; } = new HashSet<string>();
 
         // Define the state and move classes as they are in ScrabbleStateLogic
         private class PlayerInfo
@@ -139,7 +140,6 @@ namespace Turnbase.Tests.UnitTests
             string stateJson = JsonSerializer.Serialize(state);
             int maxTurns = 10;
             int turnCount = 0;
-            var failedCombinations = new HashSet<string>();
 
             while (turnCount < maxTurns)
             {
@@ -152,7 +152,7 @@ namespace Turnbase.Tests.UnitTests
                 while (retryCount < 100 && !moveSuccessful)
                 {
                     retryCount++;
-                    var move = GenerateMove(currentState, currentPlayer, failedCombinations);
+                    var move = GenerateMove(currentState, currentPlayer, FailedCombinations);
                     string moveJson = JsonSerializer.Serialize(move);
 
                     bool isValid = _logic.ValidateMove(stateJson, moveJson, out string? error);
@@ -161,7 +161,6 @@ namespace Turnbase.Tests.UnitTests
                         stateJson = _logic.ApplyMove(stateJson, moveJson, out error);
                         moveSuccessful = true;
                         TestContext.WriteLine($"Turn {turnCount}: {currentPlayer} made a successful move.");
-                        failedCombinations.Clear(); // Reset failed combinations on successful move
                         break;
                     }
                     else
