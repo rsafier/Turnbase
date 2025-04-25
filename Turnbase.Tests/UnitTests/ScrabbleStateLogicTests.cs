@@ -361,7 +361,8 @@ namespace Turnbase.Tests.UnitTests
             var updatedState1 = JsonSerializer.Deserialize<ScrabbleState>(stateJson);
             Assert.AreEqual("player2", updatedState1.CurrentPlayer);
             Assert.IsFalse(updatedState1.FirstMove);
-            Assert.AreEqual(2, updatedState1.Players.Find(p => p.Id == "player1").Rack.Length);
+            // After move, player1 should have drawn tiles from the bag to refill rack to 7
+            Assert.AreEqual(7, updatedState1.Players.Find(p => p.Id == "player1").Rack.Length);
 
             // Move 2: Player 2 plays "TEST" vertically connecting to 'E' in "HELLO"
             var move2 = new ScrabbleMove
