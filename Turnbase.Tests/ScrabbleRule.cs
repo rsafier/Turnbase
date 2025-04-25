@@ -22,10 +22,16 @@ public class ScrabbleStateLogic : IGameStateLogic
         }
 
         // --- Data Structures ---
+        private class PlayerInfo
+        {
+            public string Id { get; set; } = "";
+            public string[] Rack { get; set; } = new string[0];
+        }
+        
         private class ScrabbleState
         {
             public string[][] Board { get; set; } = new string[15][];
-            public Dictionary<string, string[]> PlayerRacks { get; set; } = new();
+            public List<PlayerInfo> Players { get; set; } = new();
             public Dictionary<string, int> PlayerScores { get; set; } = new();
             public string[] TileBag { get; set; } = new string[0];
             public string CurrentPlayer { get; set; } = "";
@@ -40,8 +46,8 @@ public class ScrabbleStateLogic : IGameStateLogic
         }
         private class PlacedTile
         {
-            public int Row { get; set; }
-            public int Col { get; set; }
+            public int X { get; set; }
+            public int Y { get; set; }
             public string Letter { get; set; } = "";
         }
 
@@ -62,18 +68,18 @@ public class ScrabbleStateLogic : IGameStateLogic
         {
             var words = new List<string>();
             // Main word (along the move direction)
-            bool isRow = moveTiles.All(t => t.Row == moveTiles[0].Row);
-            bool isCol = moveTiles.All(t => t.Col == moveTiles[0].Col);
+            bool isRow = moveTiles.All(t => t.Y == moveTiles[0].Y);
+            bool isCol = moveTiles.All(t => t.X == moveTiles[0].X);
             if (!isRow && !isCol) return words;
-            int fixedIdx = isRow ? moveTiles[0].Row : moveTiles[0].Col;
-            int min = moveTiles.Min(t => isRow ? t.Col : t.Row);
-            int max = moveTiles.Max(t => isRow ? t.Col : t.Row);
+            int fixedIdx = isRow ? moveTiles[0].Y : moveTiles[0].X;
+            int min = moveTiles.Min(t => isRow ? t.X : t.Y);
+            int max = moveTiles.Max(t => isRow ? t.X : t.Y);
             // Extend in both directions
             int start = min;
-            while (start > 0 && (isRow ? board[fixedIdx][start - 1] : board[start - 1][fixedIdx]) != null)
+            while (start > 0 && (isRow ? (board[fixedIdx] != null && board[fixedIdx][start - 1] != null) : (board[start - 1] != null && board[start - 1][fixedIdx] != null)))
                 start--;
             int end = max;
-            while (end < BoardSize - 1 && (isRow ? board[fixedIdx][end + 1] : board[end + 1][fixedIdx]) != null)
+            while (end < BoardSize - 1 && (isRow ? (board[fixedIdx] != null && board[fixedIdx][end + 1] != null) : (board[end + 1] != null && board[end + 1][fixedIdx] != null)))
                 end++;
             var word = "";
             for (int i = start; i <= end; i++)
@@ -82,12 +88,12 @@ public class ScrabbleStateLogic : IGameStateLogic
             // Perpendicular words
             foreach (var tile in moveTiles)
             {
-                int r = tile.Row, c = tile.Col;
+                int r = tile.Y, c = tile.X;
                 int s = isRow ? r : c;
                 int perpStart = s, perpEnd = s;
-                while (perpStart > 0 && (isRow ? board[perpStart - 1][c] : board[r][perpStart - 1]) != null)
+                while (perpStart > 0 && (isRow ? (board[perpStart - 1] != null && board[perpStart - 1][c] != null) : (board[r] != null && board[r][perpStart - 1] != null)))
                     perpStart--;
-                while (perpEnd < BoardSize - 1 && (isRow ? board[perpEnd + 1][c] : board[r][perpEnd + 1]) != null)
+                while (perpEnd < BoardSize - 1 && (isRow ? (board[perpEnd + 1] != null && board[perpEnd + 1][c] != null) : (board[r] != null && board[r][perpEnd + 1] != null)))
                     perpEnd++;
                 if (perpEnd > perpStart)
                 {
@@ -106,15 +112,16 @@ public class ScrabbleStateLogic : IGameStateLogic
             if (firstMove)
             {
                 // Must cover center
-                return moveTiles.Any(t => t.Row == Center.Item1 && t.Col == Center.Item2);
+                return moveTiles.Any(t => t.Y == Center.Item1 && t.X == Center.Item2);
             }
             // Must touch an existing tile
             foreach (var tile in moveTiles)
             {
                 foreach (var (dr, dc) in new[] { (-1,0), (1,0), (0,-1), (0,1) })
                 {
-                    int nr = tile.Row + dr, nc = tile.Col + dc;
-                    if (nr >= 0 && nr < BoardSize && nc >= 0 && nc < BoardSize && board[nr][nc] != null)
+                    int nr = tile.Y + dr, nc = tile.X + dc;
+                    if (nr >= 0 && nr < BoardSize && nc >= 0 && nc < BoardSize && 
+                        board[nr] != null && board[nr][nc] != null)
                         return true;
                 }
             }
@@ -141,7 +148,13 @@ public class ScrabbleStateLogic : IGameStateLogic
                 error = "No tiles placed.";
                 return false;
             }
-            var rack = state.PlayerRacks[move.PlayerId].ToList();
+            var player = state.Players.FirstOrDefault(p => p.Id == move.PlayerId);
+            if (player == null)
+            {
+                error = "Player not found.";
+                return false;
+            }
+            var rack = player.Rack.ToList();
             foreach (var tile in move.Tiles)
             {
                 if (!rack.Remove(tile.Letter))
@@ -149,19 +162,21 @@ public class ScrabbleStateLogic : IGameStateLogic
                     error = $"Player does not have tile '{tile.Letter}'.";
                     return false;
                 }
-                if (tile.Row < 0 || tile.Row >= BoardSize || tile.Col < 0 || tile.Col >= BoardSize)
+                if (tile.X < 0 || tile.X >= BoardSize || tile.Y < 0 || tile.Y >= BoardSize)
                 {
                     error = "Tile out of board bounds.";
                     return false;
                 }
-                if (state.Board[tile.Row][tile.Col] != null)
+                if (state.Board[tile.Y] == null)
+                    state.Board[tile.Y] = new string[15];
+                if (state.Board[tile.Y][tile.X] != null)
                 {
                     error = "Cell already occupied.";
                     return false;
                 }
             }
-            bool sameRow = move.Tiles.All(t => t.Row == move.Tiles[0].Row);
-            bool sameCol = move.Tiles.All(t => t.Col == move.Tiles[0].Col);
+            bool sameRow = move.Tiles.All(t => t.Y == move.Tiles[0].Y);
+            bool sameCol = move.Tiles.All(t => t.X == move.Tiles[0].X);
             if (!sameRow && !sameCol)
             {
                 error = "Tiles must be in a straight line.";
@@ -203,8 +218,21 @@ public class ScrabbleStateLogic : IGameStateLogic
             // Place tiles
             foreach (var tile in move.Tiles)
             {
-                state.Board[tile.Row][tile.Col] = tile.Letter;
-                state.PlayerRacks[move.PlayerId] = state.PlayerRacks[move.PlayerId].Where(l => l != tile.Letter).ToArray();
+                if (state.Board[tile.Y] == null)
+                    state.Board[tile.Y] = new string[15];
+                state.Board[tile.Y][tile.X] = tile.Letter;
+            }
+            var player = state.Players.FirstOrDefault(p => p.Id == move.PlayerId);
+            if (player != null)
+            {
+                player.Rack = player.Rack.Where(l => !move.Tiles.Any(t => t.Letter == l)).ToArray();
+                // Draw tiles from bag
+                var rack = player.Rack.ToList();
+                var needed = 7 - rack.Count;
+                var draw = state.TileBag.Take(needed).ToArray();
+                rack.AddRange(draw);
+                player.Rack = rack.ToArray();
+                state.TileBag = state.TileBag.Skip(needed).ToArray();
             }
             // Score
             var words = FindWords(state.Board, move.Tiles);
@@ -214,13 +242,6 @@ public class ScrabbleStateLogic : IGameStateLogic
             if (!state.PlayerScores.ContainsKey(move.PlayerId))
                 state.PlayerScores[move.PlayerId] = 0;
             state.PlayerScores[move.PlayerId] += score;
-            // Draw tiles from bag
-            var rack = state.PlayerRacks[move.PlayerId].ToList();
-            var needed = 7 - rack.Count;
-            var draw = state.TileBag.Take(needed).ToArray();
-            rack.AddRange(draw);
-            state.PlayerRacks[move.PlayerId] = rack.ToArray();
-            state.TileBag = state.TileBag.Skip(needed).ToArray();
             // Advance turn
             var idx = state.PlayerOrder.IndexOf(state.CurrentPlayer);
             state.CurrentPlayer = state.PlayerOrder[(idx + 1) % state.PlayerOrder.Count];
@@ -228,7 +249,21 @@ public class ScrabbleStateLogic : IGameStateLogic
             return JsonSerializer.Serialize(state);
         }
 
-        public IDictionary<string, long> CalculateScores(string currentStateJson) => new Dictionary<string, long>  { { "user", 69 } }; 
+        public IDictionary<string, long> CalculateScores(string currentStateJson)
+        {
+            var state = JsonSerializer.Deserialize<ScrabbleState>(currentStateJson);
+            if (state == null) return new Dictionary<string, long>();
+            
+            var result = new Dictionary<string, long>();
+            foreach (var playerId in state.PlayerOrder)
+            {
+                if (state.PlayerScores.TryGetValue(playerId, out var score))
+                    result[playerId] = score;
+                else
+                    result[playerId] = 0;
+            }
+            return result;
+        }
 
     }
 }
