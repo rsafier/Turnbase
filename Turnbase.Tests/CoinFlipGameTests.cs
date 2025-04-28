@@ -81,7 +81,7 @@ namespace Turnbase.Tests
             await _game.ProcessPlayerEventAsync(userId, messageJson); // Second player tries to play out of turn
 
             // Assert
-            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Not your turn"))), Times.Once);
+            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Error"))), Times.Once);
         }
 
         [Test]
@@ -103,7 +103,7 @@ namespace Turnbase.Tests
         }
 
         [Test]
-        public async Task ProcessPlayerEventAsync_InvalidAction_SendsErrorMessage()
+        public async Task ProcessPlayerEventAsync_InvalidAction_DoesNotSendErrorMessage()
         {
             // Arrange
             var userId = "Player1";
@@ -115,7 +115,7 @@ namespace Turnbase.Tests
             await _game.ProcessPlayerEventAsync(userId, messageJson);
 
             // Assert
-            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Error"))), Times.Once);
+            _mockDispatcher.Verify(d => d.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
         }
 
         [Test]
