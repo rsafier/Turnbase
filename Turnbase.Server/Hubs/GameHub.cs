@@ -41,6 +41,16 @@ namespace Turnbase.Server.Hubs
 
             // Send PlayerJoined event to all clients in the group, including the caller
             await Clients.Group(roomId).SendAsync("PlayerJoined", userId);
+            
+            // Also send the list of existing players to the new player
+            var existingPlayers = _eventDispatcher.ConnectedPlayers.Keys.ToList();
+            foreach (var player in existingPlayers)
+            {
+                if (player != userId)
+                {
+                    await Clients.User(userId).SendAsync("PlayerJoined", player);
+                }
+            }
         }
 
         public async Task LeaveRoom(string roomId)
