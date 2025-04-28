@@ -15,6 +15,7 @@ using Turnbase.Server.Hubs;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace Turnbase.Tests
 {

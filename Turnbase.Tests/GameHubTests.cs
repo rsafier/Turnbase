@@ -7,6 +7,7 @@ using Turnbase.Server.GameLogic;
 using System.Collections.Concurrent;
 using System.Security.Claims;
 using System.Threading;
+using Microsoft.Extensions.Logging;
 
 namespace Turnbase.Tests
 {

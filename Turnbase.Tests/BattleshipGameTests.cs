@@ -3,6 +3,7 @@ using Moq;
 using Newtonsoft.Json;
 using NUnit.Framework;
 using Turnbase.Server.GameLogic;
+using Microsoft.Extensions.Logging;
 
 namespace Turnbase.Tests
 {
