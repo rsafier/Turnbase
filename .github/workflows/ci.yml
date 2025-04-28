@@ -24,14 +24,5 @@ jobs:
     - name: Build
       run: dotnet build --configuration Release --no-restore
 
-    - name: Create Test Results Directory
-      run: mkdir -p Turnbase.Tests/TestResults
-    - name: Test with Coverage
-      run: cd Turnbase.Tests && dotnet test --configuration Release --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/
-    - name: Find Coverage File
-      run: find Turnbase.Tests/TestResults -name "coverage.opencover.xml" -exec cp {} Turnbase.Tests/TestResults/coverage.opencover.xml \;
-    - name: Upload Coverage Report
-      uses: actions/upload-artifact@v3
-      with:
-        name: coverage-report
-        path: Turnbase.Tests/TestResults/coverage.opencover.xml
+    - name: Test
+      run: dotnet test --configuration Release --no-build --verbosity normal
