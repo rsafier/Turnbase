@@ -88,7 +88,8 @@ namespace Turnbase.Tests
             _host.Dispose();
         }
 
-        [Test]
+        [Test]   
+        [NonParallelizable]
         public async Task JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent()
         {
             // Arrange
@@ -109,6 +110,7 @@ namespace Turnbase.Tests
             Assert.That(player2Result, Is.EqualTo(_player2Id));
         }
 
+        [NonParallelizable]
         [Test]
         public async Task SubmitMove_PlayerMakesMove_ReceivesGameStartedAndCoinFlipResult()
         {
@@ -166,6 +168,7 @@ namespace Turnbase.Tests
             }
         }
 
+        [NonParallelizable]
         [Test]
         public async Task SubmitMove_GameEnds_StateIsSavedToDatabase()
         {
@@ -202,7 +205,7 @@ namespace Turnbase.Tests
             // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(60));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
             }
             catch (TimeoutException ex)
             {
