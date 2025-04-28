@@ -12,18 +12,21 @@ namespace Turnbase.Tests
         public TestAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder)
-            : base(options, logger, encoder)
+            UrlEncoder encoder,
+            ISystemClock clock)
+            : base(options, logger, encoder, clock)
         {
         }
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Allow anonymous access for testing purposes
-            var claims = new[] { new Claim(ClaimTypes.Name, Context.ConnectionId) };
-            var identity = new ClaimsIdentity(claims, "TestScheme");
+            // Use a unique identifier for the connection since we can't access ConnectionId directly
+            var connectionId = Context.Items.ContainsKey("ConnectionId") ? Context.Items["ConnectionId"].ToString() : "TestConnection_" + Guid.NewGuid().ToString();
+            var claims = new[] { new Claim(ClaimTypes.Name, connectionId) };
+            var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, "TestScheme");
+            var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
@@ -33,7 +36,7 @@ namespace Turnbase.Tests
     {
         public static AuthenticationBuilder AddTestAuth(this AuthenticationBuilder builder, Action<AuthenticationSchemeOptions> configureOptions)
         {
-            return builder.AddScheme<TestAuthenticationHandler>("TestScheme", configureOptions);
+            return builder.AddScheme<AuthenticationSchemeOptions, TestAuthenticationHandler>("TestScheme", configureOptions);
         }
     }
 }

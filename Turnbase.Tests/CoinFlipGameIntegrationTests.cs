@@ -95,12 +95,13 @@ namespace Turnbase.Tests
                 })
                 .Build();
 
+            // Start connections and set player IDs
             await _player1Connection.StartAsync();
             await _player2Connection.StartAsync();
             
-            // Set player IDs based on connection IDs since authentication is not used in tests
-            _player1Id = _player1Connection.ConnectionId;
-            _player2Id = _player2Connection.ConnectionId;
+            // Set player IDs - since we can't access ConnectionId directly in auth handler, use unique IDs
+            _player1Id = "Player1_" + Guid.NewGuid().ToString();
+            _player2Id = "Player2_" + Guid.NewGuid().ToString();
         }
 
         [TearDown]
