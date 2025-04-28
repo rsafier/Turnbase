@@ -45,7 +45,10 @@ namespace Turnbase.Tests
                     webHost.Configure(app =>
                     {
                         app.UseRouting();
-                        app.MapHub<GameHub>("/gameHub");
+                        app.UseEndpoints(endpoints =>
+                        {
+                            endpoints.MapHub<GameHub>("/gameHub");
+                        });
                     });
                 });
 
