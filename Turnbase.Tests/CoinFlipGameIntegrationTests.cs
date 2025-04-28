@@ -101,7 +101,7 @@ namespace Turnbase.Tests
             
             // Set player IDs - use deterministic IDs for testing
             _player1Id = "TestConnection_Player1";
-            _player2Id = "TestConnection_Player1"; // Temporarily set to same ID due to test auth handler limitation
+            _player2Id = "TestConnection_Player2";
         }
 
         [TearDown]

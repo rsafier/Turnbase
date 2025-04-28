@@ -25,7 +25,7 @@ namespace Turnbase.Server.Hubs
             _eventDispatcher.RoomId = roomId;
 
             // Add player to connected players
-            _eventDispatcher.ConnectedPlayers.TryAdd(userId, string.Empty);
+            _eventDispatcher.ConnectedPlayers.TryAdd(userId, Context.ConnectionId);
 
             // Create or get game instance based on game type and room
             IGameInstance gameInstance = _gameInstances.GetOrAdd(roomId, key =>

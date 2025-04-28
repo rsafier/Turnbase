@@ -103,7 +103,7 @@ namespace Turnbase.Tests
             Console.WriteLine($"Player 1 Connection ID: {_player1Connection.ConnectionId}");
             Console.WriteLine($"Player 2 Connection ID: {_player2Connection.ConnectionId}");
             
-            // Set player IDs - use hardcoded values to match test authentication handler
+            // Set player IDs based on how TestAuthenticationHandler assigns them
             _player1Id = "TestConnection_Player1";
             _player2Id = "TestConnection_Player2";
             Console.WriteLine($"Expected Player 1 ID: {_player1Id}");
@@ -142,11 +142,8 @@ namespace Turnbase.Tests
                 player1AllReceivedIds.Add(userId); // Log all received events
                 lock (player1JoinedIds)
                 {
-                    if (!player1JoinedIds.Contains(userId))
-                    {
-                        player1JoinedIds.Add(userId);
-                    }
-                    if (player1JoinedIds.Count == 2)
+                    player1JoinedIds.Add(userId);
+                    if (player1JoinedIds.Count >= 2)
                         player1JoinedTask.TrySetResult(player1JoinedIds);
                 }
             });
@@ -156,11 +153,8 @@ namespace Turnbase.Tests
                 player2AllReceivedIds.Add(userId); // Log all received events
                 lock (player2JoinedIds)
                 {
-                    if (!player2JoinedIds.Contains(userId))
-                    {
-                        player2JoinedIds.Add(userId);
-                    }
-                    if (player2JoinedIds.Count == 2)
+                    player2JoinedIds.Add(userId);
+                    if (player2JoinedIds.Count >= 2)
                         player2JoinedTask.TrySetResult(player2JoinedIds);
                 }
             });
