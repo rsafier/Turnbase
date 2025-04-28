@@ -16,8 +16,7 @@ namespace Turnbase.Tests
         public void Setup()
         {
             _mockDispatcher = new Mock<IGameEventDispatcher>();
-            _game = new CoinFlipGame();
-            _game.EventDispatcher = _mockDispatcher.Object;
+            _game = new CoinFlipGame(_mockDispatcher.Object);
         }
 
         [Test]
