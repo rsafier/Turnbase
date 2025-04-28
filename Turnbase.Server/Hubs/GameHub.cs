@@ -27,7 +27,7 @@ namespace Turnbase.Server.Hubs
             var userId = Context.User?.Identity?.Name ?? Context.ConnectionId;
             try
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+                await Groups.AddToGroupAsync(Context.ConnectionId, roomId, Context.GetCancellationToken());
                 _eventDispatcher.RoomId = roomId;
 
                 // Add player to connected players
@@ -46,17 +46,19 @@ namespace Turnbase.Server.Hubs
                 gameInstance.EventDispatcher.RoomId = roomId;
 
                 // Send PlayerJoined event to all clients in the group, including the caller
-                await Clients.Group(roomId).SendAsync("PlayerJoined", userId);
+                await Clients.Group(roomId).SendAsync("PlayerJoined", userId, Context.GetCancellationToken());
                 
                 // Also send the list of existing players to the new player
                 var existingPlayers = _eventDispatcher.ConnectedPlayers.Keys.ToList();
+                var tasks = new List<Task>();
                 foreach (var player in existingPlayers)
                 {
                     if (player != userId)
                     {
-                        await Clients.Client(Context.ConnectionId).SendAsync("PlayerJoined", player);
+                        tasks.Add(Clients.Client(Context.ConnectionId).SendAsync("PlayerJoined", player, Context.GetCancellationToken()));
                     }
                 }
+                await Task.WhenAll(tasks);
 
                 _logger.LogInformation("User {UserId} joined room {RoomId} with game type {GameType}", userId, roomId, gameType);
             }
@@ -72,9 +74,9 @@ namespace Turnbase.Server.Hubs
             var userId = Context.User?.Identity?.Name ?? Context.ConnectionId;
             try
             {
-                await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
+                await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId, Context.GetCancellationToken());
                 _eventDispatcher.ConnectedPlayers.TryRemove(userId, out _);
-                await Clients.Group(roomId).SendAsync("PlayerLeft", userId);
+                await Clients.Group(roomId).SendAsync("PlayerLeft", userId, Context.GetCancellationToken());
 
                 // If no players left in room, remove game instance
                 if (_eventDispatcher.ConnectedPlayers.IsEmpty)
@@ -142,7 +144,7 @@ namespace Turnbase.Server.Hubs
             try
             {
                 var roomId = Guid.NewGuid().ToString();
-                await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+                await Groups.AddToGroupAsync(Context.ConnectionId, roomId, Context.GetCancellationToken());
                 _eventDispatcher.RoomId = roomId;
 
                 // Add player to connected players
@@ -160,8 +162,8 @@ namespace Turnbase.Server.Hubs
                 gameInstance.RoomId = roomId;
                 gameInstance.EventDispatcher.RoomId = roomId;
 
-                await Clients.Caller.SendAsync("RoomCreated", roomId);
-                await Clients.Group(roomId).SendAsync("PlayerJoined", userId);
+                await Clients.Caller.SendAsync("RoomCreated", roomId, Context.GetCancellationToken());
+                await Clients.Group(roomId).SendAsync("PlayerJoined", userId, Context.GetCancellationToken());
 
                 _logger.LogInformation("User {UserId} created room {RoomId} with game type {GameType}", userId, roomId, gameType);
             }
@@ -177,7 +179,7 @@ namespace Turnbase.Server.Hubs
             try
             {
                 var rooms = _gameInstances.Keys.ToList();
-                await Clients.Caller.SendAsync("RoomList", rooms);
+                await Clients.Caller.SendAsync("RoomList", rooms, Context.GetCancellationToken());
                 _logger.LogInformation("User requested list of rooms. Total rooms: {RoomCount}", rooms.Count);
             }
             catch (Exception ex)
