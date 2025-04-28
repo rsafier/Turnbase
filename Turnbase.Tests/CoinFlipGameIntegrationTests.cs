@@ -39,7 +39,6 @@ namespace Turnbase.Tests
                         services.AddSignalR();
                         services.AddDbContextFactory<GameContext>(options =>
                             options.UseSqlite("Data Source=:memory:"));
-                        services.AddSingleton<IGameInstance>(sp => new CoinFlipGame(sp.GetRequiredService<IGameEventDispatcher>()));
                         services.AddSingleton<IGameEventDispatcher, GameEventDispatcher>();
                     });
                     webHost.Configure(app =>
@@ -100,8 +99,8 @@ namespace Turnbase.Tests
             _player2Connection.On<string>("PlayerJoined", (userId) => player2JoinedTask.SetResult(userId));
 
             // Act
-            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id);
-            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id);
+            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
 
             // Assert
             var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
@@ -126,12 +125,14 @@ namespace Turnbase.Tests
                     coinFlipResultTask.TrySetResult(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id);
-            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id);
+            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
 
             // Explicitly start the game
-            var gameInstance = _host.Services.GetRequiredService<IGameInstance>();
-            await gameInstance.StartAsync();
+            await _player1Connection.InvokeAsync("StartGame", _roomId);
+
+            // Small delay to ensure game start event is processed
+            await Task.Delay(100);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
@@ -165,12 +166,14 @@ namespace Turnbase.Tests
                     gameEndedTask.TrySetResult(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id);
-            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id);
+            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
 
             // Explicitly start the game
-            var gameInstance = _host.Services.GetRequiredService<IGameInstance>();
-            await gameInstance.StartAsync();
+            await _player1Connection.InvokeAsync("StartGame", _roomId);
+
+            // Small delay to ensure game start event is processed
+            await Task.Delay(100);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
