@@ -48,7 +48,7 @@ namespace Turnbase.Server.Hubs
             {
                 if (player != userId)
                 {
-                    await Clients.User(userId).SendAsync("PlayerJoined", player);
+                    await Clients.Client(Context.ConnectionId).SendAsync("PlayerJoined", player);
                 }
             }
         }
