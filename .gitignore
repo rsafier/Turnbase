@@ -1,1 +1,4 @@
 .aider*
+.idea/
+bin/
+obj/
