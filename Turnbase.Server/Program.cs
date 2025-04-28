@@ -65,7 +65,8 @@ builder.Services.AddScoped<IGameEventDispatcher, GameEventDispatcher>();
 builder.Services.AddScoped<IGameInstance>(provider => 
 {
     var dispatcher = provider.GetRequiredService<IGameEventDispatcher>();
-    return new CoinFlipGame(dispatcher);
+    var logger = provider.GetRequiredService<ILogger<BaseGameInstance>>();
+    return new CoinFlipGame(dispatcher, logger);
 }); // Default game, can be overridden per request if needed
 
 var app = builder.Build();
