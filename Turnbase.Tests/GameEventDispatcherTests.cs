@@ -12,6 +12,7 @@ using Microsoft.EntityFrameworkCore;
 using Turnbase.Server.Models;
 using System.Linq;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace Turnbase.Tests
 {
@@ -34,7 +35,7 @@ namespace Turnbase.Tests
             _mockHubContext = new Mock<IHubContext<GameHub>>();
             _mockClients = new Mock<IHubClients>();
             _mockClientProxy = new Mock<IClientProxy>();
-            _mockGameContext = new Mock<GameContext>(new DbContextOptions<GameContext>());
+            _mockGameContext = new Mock<GameContext>();
             _mockGameSet = new Mock<DbSet<Game>>();
             _mockGameStateSet = new Mock<DbSet<GameState>>();
             _connectedPlayers = new ConcurrentDictionary<string, string>();
@@ -43,11 +44,11 @@ namespace Turnbase.Tests
             _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
             _mockClients.Setup(c => c.User(It.IsAny<string>())).Returns(_mockClientProxy.Object);
 
-            // Setup mock for database operations without directly accessing properties
+            // Setup mock for database operations
             SetupDbSetMock(_mockGameSet);
             SetupDbSetMock(_mockGameStateSet);
 
-            // Mock specific methods instead of properties to avoid Moq limitations
+            // Mock specific methods for database operations
             _mockGameContext.Setup(g => g.FindAsync<Game>(It.IsAny<object[]>(), It.IsAny<CancellationToken>())).ReturnsAsync((object[] keys, CancellationToken token) => 
             {
                 int id = (int)keys[0];
@@ -58,8 +59,13 @@ namespace Turnbase.Tests
             _mockGameContext.Setup(g => g.Add(It.IsAny<GameState>())).Callback<GameState>(state => { });
             _mockGameContext.Setup(g => g.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            // Setup queryable for GameStates without property access
+            // Setup queryable for GameStates
             _mockGameContext.Setup(g => g.Set<GameState>()).Returns(_mockGameStateSet.Object);
+            _mockGameContext.Setup(g => g.Set<Game>()).Returns(_mockGameSet.Object);
+
+            // Mock the database facade to avoid constructor issues
+            var mockDatabaseFacade = new Mock<DatabaseFacade>(_mockGameContext.Object);
+            _mockGameContext.Setup(g => g.Database).Returns(mockDatabaseFacade.Object);
 
             _dispatcher = new GameEventDispatcher(_mockHubContext.Object, _mockGameContext.Object);
             _dispatcher.RoomId = "1"; // Default room ID for tests
@@ -239,7 +245,6 @@ namespace Turnbase.Tests
             string stateJson = "{\"State\": \"TestState\"}";
             _dispatcher.RoomId = "1";
             var game = new Game { Id = 1, Name = "Game-1", CreatedDate = DateTime.UtcNow };
-            _mockGameSet.Setup(g => g.FindAsync(1)).ReturnsAsync(game);
             _mockGameContext.Setup(c => c.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
             // Act
@@ -247,7 +252,7 @@ namespace Turnbase.Tests
 
             // Assert
             Assert.IsTrue(result, "SaveGameStateAsync should return true when state is saved successfully.");
-            _mockGameContext.Verify(c => c.GameStates.Add(It.Is<GameState>(gs => gs.StateJson == stateJson && gs.GameId == 1)), Times.Once);
+            _mockGameContext.Verify(c => c.Add(It.Is<GameState>(gs => gs.StateJson == stateJson && gs.GameId == 1)), Times.Once);
             _mockGameContext.Verify(c => c.SaveChangesAsync(It.IsAny<CancellationToken>()), Times.Once);
         }
 
