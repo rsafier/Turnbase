@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using Turnbase.Server.GameLogic;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
 
 namespace Turnbase.Server.Hubs
 {

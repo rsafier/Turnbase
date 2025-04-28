@@ -72,15 +72,15 @@ namespace Turnbase.Server.GameLogic
 
             try
             {
-                dynamic move = JsonConvert.DeserializeObject(messageJson);
-                string action = move.Action?.ToString();
+                dynamic? move = JsonConvert.DeserializeObject(messageJson);
+                string? action = move?.Action?.ToString();
 
                 if (action == "PlaceShip")
                 {
-                    string shipType = move.ShipType?.ToString();
-                    int startX = Convert.ToInt32(move.StartX);
-                    int startY = Convert.ToInt32(move.StartY);
-                    bool isHorizontal = Convert.ToBoolean(move.IsHorizontal);
+                    string? shipType = move?.ShipType?.ToString();
+                    int startX = move?.StartX != null ? Convert.ToInt32(move.StartX) : 0;
+                    int startY = move?.StartY != null ? Convert.ToInt32(move.StartY) : 0;
+                    bool isHorizontal = move?.IsHorizontal != null ? Convert.ToBoolean(move.IsHorizontal) : false;
 
                     if (!_playerBoards.ContainsKey(userId))
                     {
@@ -125,8 +125,8 @@ namespace Turnbase.Server.GameLogic
                         return;
                     }
 
-                    int x = Convert.ToInt32(move.X);
-                    int y = Convert.ToInt32(move.Y);
+                    int x = move?.X != null ? Convert.ToInt32(move.X) : -1;
+                    int y = move?.Y != null ? Convert.ToInt32(move.Y) : -1;
                     string opponentId = GetOpponent(userId);
 
                     if (string.IsNullOrEmpty(opponentId) || !_playerBoards.ContainsKey(opponentId))
@@ -202,7 +202,7 @@ namespace Turnbase.Server.GameLogic
         private readonly Dictionary<string, List<(int X, int Y)>> _shipPositions;
         private readonly Dictionary<string, int> _shipHits;
 
-        public PlayerBoard(int size, List<string> shipTypes, Dictionary<string, int> shipSizes = null)
+        public PlayerBoard(int size, List<string> shipTypes, Dictionary<string, int>? shipSizes = null)
         {
             _size = size;
             _shipTypes = shipTypes;
@@ -288,9 +288,12 @@ namespace Turnbase.Server.GameLogic
             {
                 if (ship.Value.Any(p => p.X == x && p.Y == y))
                 {
-                    if (_shipHits[ship.Key] == _shipSizes[ship.Key])
+                    if (_shipHits.TryGetValue(ship.Key, out int hits) && _shipSizes.TryGetValue(ship.Key, out int size))
                     {
-                        return ship.Key;
+                        if (hits == size)
+                        {
+                            return ship.Key;
+                        }
                     }
                 }
             }

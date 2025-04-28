@@ -84,17 +84,19 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 ### Phase 3: TDD for Battleship-Style Game (Complex Game)
 **Objective**: Develop a complex game to test advanced engine features.
 
-- [ ] **Unit Tests for Battleship Logic**  
-  **Status**: Not Started  
+- [X] **Unit Tests for Battleship Logic**  
+  **Status**: Completed  
   - In `Turnbase.Tests`, create `BattleshipGameTests.cs`.  
   - Write tests for board initialization, ship placement, player attacks, turn enforcement, and win conditions.  
   - Mock `IGameEventDispatcher` to isolate logic.
+  **Note**: Unit tests are implemented covering game start, stop, ship placement, attacks, and win conditions.
 
-- [ ] **Implement Battleship Logic**  
-  **Status**: Not Started  
+- [X] **Implement Battleship Logic**  
+  **Status**: Completed  
   - In `Turnbase.Server.GameLogic`, create `BattleshipGame.cs` implementing `IGameInstance`.  
   - Implement grid-based board, ship placement, attack validation, and state management.  
   - Use `EventDispatcher` for targeted updates (hide opponent’s ships).
+  **Note**: Logic is fully implemented with board management, ship placement, attack mechanics, and turn handling.
 
 - [ ] **Integration Tests for Battleship**  
   **Status**: Not Started  
@@ -102,11 +104,12 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Test state persistence and recovery after disconnections.  
   - Validate turn mechanics and error conditions (invalid moves).
 
-- [ ] **Full Implementation**  
-  **Status**: Not Started  
+- [X] **Full Implementation**  
+  **Status**: Completed  
   - Integrate `BattleshipGame` with `GameHub` for real-time play.  
   - Implement event payloads for hits, misses, and game over.  
   - Handle edge cases like player disconnection.
+  **Note**: Integrated with dynamic game instance creation in `GameHub.cs`.
 
 ### Phase 4: Engine Enhancements and Polish
 **Objective**: Add features to make the engine production-ready.
@@ -159,10 +162,10 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
    - [X] Full implementation in `GameHub`.
 
 3. **Battleship Game**  
-   - [ ] Unit tests for logic.  
-   - [ ] Logic implementation.  
+   - [X] Unit tests for logic.  
+   - [X] Logic implementation.  
    - [ ] Integration tests for multiplayer scenarios.  
-   - [ ] Full implementation in `GameHub`.
+   - [X] Full implementation in `GameHub`.
 
 4. **Engine Features**  
    - [ ] Authentication tests and implementation.  
@@ -177,9 +180,9 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 - **Current Phase**: Phase 3 - TDD for Battleship-Style Game  
 - **Next Steps**:  
-  1. Begin Phase 3 by planning and writing unit tests for the Battleship-style game.  
-  2. Implement the Battleship game logic based on the test specifications.  
-- **Updates**: Phase 2 is complete with integration tests for `CoinFlipGame` implemented and passing. The focus now shifts to Phase 3, starting with unit tests for the more complex Battleship-style game to test advanced engine features.
+  1. Develop integration tests for the Battleship game to validate SignalR and database interactions.  
+  2. Begin Phase 4 by planning enhancements like player authentication and room management.  
+- **Updates**: Phase 3 unit tests and logic for `BattleshipGame` are complete. The next focus is on integration tests to confirm end-to-end functionality for the Battleship game.
 
 ## Conclusion
 
