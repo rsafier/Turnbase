@@ -98,12 +98,12 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Use `EventDispatcher` for targeted updates (hide opponent’s ships).
   **Note**: Logic is fully implemented with board management, ship placement, attack mechanics, and turn handling.
 
-- [ ] **Integration Tests for Battleship**  
-  **Status**: In Progress  
+- [X] **Integration Tests for Battleship**  
+  **Status**: Completed  
   - Write tests for multiplayer scenarios with SignalR clients.  
   - Test state persistence and recovery after disconnections.  
   - Validate turn mechanics and error conditions (invalid moves).  
-  **Note**: Initial integration tests are implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, and basic attacks.
+  **Note**: Integration tests are fully implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, attacks, and event handling.
 
 - [X] **Full Implementation**  
   **Status**: Completed  
@@ -165,7 +165,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 3. **Battleship Game**  
    - [X] Unit tests for logic.  
    - [X] Logic implementation.  
-   - [ ] Integration tests for multiplayer scenarios.  
+   - [X] Integration tests for multiplayer scenarios.  
    - [X] Full implementation in `GameHub`.
 
 4. **Engine Features**  
@@ -179,11 +179,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 ## Progress Notes
 
-- **Current Phase**: Phase 3 - TDD for Battleship-Style Game  
+- **Current Phase**: Phase 4 - Engine Enhancements and Polish  
 - **Next Steps**:  
-  1. Develop integration tests for the Battleship game to validate SignalR and database interactions.  
-  2. Begin Phase 4 by planning enhancements like player authentication and room management.  
-- **Updates**: Phase 3 unit tests and logic for `BattleshipGame` are complete. CoinFlip integration tests are passing. The next focus is on integration tests to confirm end-to-end functionality for the Battleship game.
+  1. Begin Phase 4 by planning and implementing enhancements like player authentication.  
+  2. Develop room management features to dynamically create and manage game rooms.  
+- **Updates**: Phase 3 is complete with unit tests, logic, and integration tests for `BattleshipGame`. CoinFlip integration tests are also passing. The focus now shifts to Phase 4 for engine enhancements.
 
 ## Conclusion
 
