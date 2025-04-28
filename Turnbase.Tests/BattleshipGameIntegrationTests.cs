@@ -330,15 +330,3 @@ namespace Turnbase.Tests
         }
     }
 }
-```
-
-Now, let's update the `GameEngineDesignAndPlan.md` to reflect that we've started working on the Battleship integration tests.
-
-Turnbase.Server/GameEngineDesignAndPlan.md
-```markdown
-<<<<<<< SEARCH
-- [ ] **Integration Tests for Battleship**  
-  **Status**: Not Started  
-  - Write tests for multiplayer scenarios with SignalR clients.  
-  - Test state persistence and recovery after disconnections.  
-  - Validate turn mechanics and error conditions (invalid moves).
