@@ -74,6 +74,8 @@ namespace Turnbase.Tests
             var messageJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             _mockDispatcher.Setup(d => d.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
             _mockDispatcher.Setup(d => d.BroadcastAsync(It.IsAny<string>())).ReturnsAsync(true);
+            _mockDispatcher.Setup(d => d.ConnectedPlayers).Returns(new ConcurrentDictionary<string, string>(
+                new System.Collections.Generic.Dictionary<string, string> { { userId, "" }, { otherUserId, "" } }));
 
             // Act
             await _game.StartAsync(); // Start the game to set it as active
