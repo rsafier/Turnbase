@@ -163,8 +163,8 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(120));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(120));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(12));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(12));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
@@ -218,7 +218,7 @@ namespace Turnbase.Tests
             // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(120));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(12));
             }
             catch (TimeoutException ex)
             {
