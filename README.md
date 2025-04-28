@@ -103,7 +103,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Write tests for multiplayer scenarios with SignalR clients.  
   - Test state persistence and recovery after disconnections.  
   - Validate turn mechanics and error conditions (invalid moves).  
-  **Note**: Integration tests are implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, attacks, and event handling. However, two tests are still failing: `Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent` due to timeout issues.
+  **Note**: Integration tests are implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, attacks, and event handling. Two tests are still failing: `Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent` due to timeout issues. The `JoinRoom` test shows Player 1 receiving duplicate events for itself and Player 2 not receiving its own join event, indicating a potential issue with event broadcasting or test setup.
 
 - [X] **Full Implementation**  
   **Status**: Completed  
@@ -182,8 +182,8 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 - **Current Phase**: Phase 3 - TDD for Battleship-Style Game (Complex Game)  
 - **Next Steps**:  
   1. Debug and fix the failing integration tests for Battleship (`Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent`).  
-  2. Investigate potential issues with SignalR event delivery timing or test setup.  
-- **Updates**: Integration tests for Battleship are still in progress with two failing tests due to timeouts. Focus is on resolving these issues before moving to Phase 4 enhancements.
+  2. Investigate potential issues with SignalR event delivery timing or test setup, focusing on why Player 1 receives duplicate join events and Player 2 misses its own join event.  
+- **Updates**: Integration tests for Battleship are still in progress with two failing tests due to timeouts. Recent changes to use connection IDs in tests did not resolve the issue. Further debugging is needed to address event broadcasting or reception problems before moving to Phase 4 enhancements.
 
 ## Conclusion
 
