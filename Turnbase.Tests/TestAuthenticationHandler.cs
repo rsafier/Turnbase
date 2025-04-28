@@ -21,8 +21,8 @@ namespace Turnbase.Tests
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Allow anonymous access for testing purposes
-            // Use a unique identifier for the connection since we can't access ConnectionId directly
-            var connectionId = Context.Items.ContainsKey("ConnectionId") ? Context.Items["ConnectionId"].ToString() : "TestConnection_" + Guid.NewGuid().ToString();
+            // Use a deterministic identifier for the connection
+            var connectionId = Context.Items.ContainsKey("ConnectionId") ? Context.Items["ConnectionId"].ToString() : "TestConnection_Player" + (Context.Items.Count + 1);
             var claims = new[] { new Claim(ClaimTypes.Name, connectionId) };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
