@@ -133,8 +133,8 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Use `ILogger` for logging events and errors.  
   **Note**: Comprehensive logging has been added to `GameHub`, `BaseGameInstance`, `BattleshipGame`, and `CoinFlipGame`. Error handling with try-catch blocks is in place across all major components.
 
-- [ ] **Performance Optimization**  
-  **Status**: Not Started  
+- [X] **Performance Optimization**  
+  **Status**: Completed  
   - Optimize SignalR message frequency by batching updates.  
   - Use asynchronous operations for I/O tasks.
 
@@ -184,9 +184,9 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 - **Current Phase**: Phase 4 - Engine Enhancements and Polish  
 - **Next Steps**:  
-  1. Optimize performance by batching SignalR message updates and ensuring asynchronous operations for I/O tasks.  
+  1. Test the performance optimizations for SignalR message batching and asynchronous operations.  
   2. Begin Phase 5 by documenting public interfaces, hub methods, and providing game rules and setup instructions.  
-- **Updates**: Error handling and logging have been fully implemented across game logic and hub components using try-catch blocks and `ILogger`. All tests are passing with warnings related to test output verbosity. The project continues in Phase 4, focusing on performance optimization before moving to documentation and deployment in Phase 5.
+- **Updates**: Performance optimization has been completed with SignalR message batching and asynchronous operations for I/O tasks. Error handling and logging are fully implemented across game logic and hub components using try-catch blocks and `ILogger`. All tests are passing with warnings related to test output verbosity. The project continues in Phase 4, focusing on testing the optimizations before moving to documentation and deployment in Phase 5.
 
 ## Conclusion
 
