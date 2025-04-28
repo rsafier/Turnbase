@@ -45,7 +45,7 @@ namespace Turnbase.Tests
             _mockContext.Setup(c => c.ConnectionId).Returns("Connection1");
 
             // Setup mock clients and groups
-            _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
+            _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object as IHubClients);
             _mockHubContext.Setup(h => h.Groups).Returns(_mockGroups.Object);
 
             var mockLogger = new Mock<ILogger<GameHub>>();
