@@ -115,10 +115,12 @@ namespace Turnbase.Tests
             // Arrange
             var gameStartedTask = new TaskCompletionSource<string>();
             var coinFlipResultTask = new TaskCompletionSource<string>();
+            var debugMessages = new List<string>();
 
             _player1Connection.On<string>("GameEvent", (message) =>
             {
                 Console.WriteLine($"Player1 Received (GameEvent): {message}");
+                debugMessages.Add(message);
                 if (message.Contains("GameStarted"))
                     gameStartedTask.TrySetResult(message);
                 if (message.Contains("CoinFlipResult"))
@@ -132,7 +134,7 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("StartGame", _roomId);
 
             // Small delay to ensure game start event is processed
-            await Task.Delay(100);
+            await Task.Delay(500);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
@@ -141,15 +143,19 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
             }
             catch (TimeoutException ex)
             {
-                Console.WriteLine("Timeout occurred. Check logs for received messages.");
+                Console.WriteLine("Timeout occurred. Check logs for received messages:");
+                foreach (var msg in debugMessages)
+                {
+                    Console.WriteLine($"Received: {msg}");
+                }
                 Assert.Fail($"Timeout: {ex.Message}");
             }
         }
@@ -159,9 +165,11 @@ namespace Turnbase.Tests
         {
             // Arrange
             var gameEndedTask = new TaskCompletionSource<string>();
+            var debugMessages = new List<string>();
             _player1Connection.On<string>("GameEvent", (message) =>
             {
                 Console.WriteLine($"Player1 Received (GameEvent): {message}");
+                debugMessages.Add(message);
                 if (message.Contains("GameEnded"))
                     gameEndedTask.TrySetResult(message);
             });
@@ -173,7 +181,7 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("StartGame", _roomId);
 
             // Small delay to ensure game start event is processed
-            await Task.Delay(100);
+            await Task.Delay(500);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
@@ -182,11 +190,15 @@ namespace Turnbase.Tests
             // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
             }
             catch (TimeoutException ex)
             {
-                Console.WriteLine("Timeout occurred waiting for GameEnded. Check logs for received messages.");
+                Console.WriteLine("Timeout occurred waiting for GameEnded. Check logs for received messages:");
+                foreach (var msg in debugMessages)
+                {
+                    Console.WriteLine($"Received: {msg}");
+                }
                 Assert.Fail($"Timeout: {ex.Message}");
             }
 

@@ -117,17 +117,19 @@ namespace Turnbase.Tests
             await _game.ProcessPlayerEventAsync(defenderId, placeShipJson);
 
             var attackJson = JsonConvert.SerializeObject(new { Action = "Attack", X = 0, Y = 0 });
-            string capturedEventJson = string.Empty;
+            List<string> capturedEventJsons = new List<string>();
             _mockDispatcher.Setup(d => d.BroadcastAsync(It.IsAny<string>()))
-                .Callback<string>(json => capturedEventJson = json)
+                .Callback<string>(json => capturedEventJsons.Add(json))
                 .ReturnsAsync(true);
 
             // Act
             await _game.ProcessPlayerEventAsync(attackerId, attackJson);
 
             // Assert
-            Assert.IsFalse(string.IsNullOrEmpty(capturedEventJson));
-            dynamic? eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            Assert.IsTrue(capturedEventJsons.Count > 0, "No events were captured.");
+            var attackResultJson = capturedEventJsons.FirstOrDefault(json => json.Contains("AttackResult"));
+            Assert.IsNotNull(attackResultJson, "AttackResult event not found in captured events.");
+            dynamic? eventData = JsonConvert.DeserializeObject(attackResultJson);
             Assert.IsNotNull(eventData);
             Assert.AreEqual("AttackResult", eventData.EventType.ToString());
             Assert.AreEqual(attackerId, eventData.AttackerId.ToString());
