@@ -8,6 +8,7 @@ using System;
 
 namespace Turnbase.Tests
 {
+#pragma warning disable CS0618 // Suppress obsolete warning for ISystemClock
     public class TestAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
         public TestAuthenticationHandler(
@@ -18,7 +19,6 @@ namespace Turnbase.Tests
             : base(options, logger, encoder, clock)
         {
         }
-#pragma warning disable CS0618 // Suppress obsolete warning for ISystemClock
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
