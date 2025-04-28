@@ -12,12 +12,14 @@ namespace Turnbase.Server.Hubs
     {
         private readonly IGameEventDispatcher _eventDispatcher;
         private readonly ILogger<GameHub> _logger;
+        private readonly ILoggerFactory _loggerFactory;
         private static readonly ConcurrentDictionary<string, IGameInstance> _gameInstances = new ConcurrentDictionary<string, IGameInstance>();
 
-        public GameHub(IGameEventDispatcher eventDispatcher, ILogger<GameHub> logger)
+        public GameHub(IGameEventDispatcher eventDispatcher, ILogger<GameHub> logger, ILoggerFactory loggerFactory)
         {
             _eventDispatcher = eventDispatcher;
             _logger = logger;
+            _loggerFactory = loggerFactory;
         }
 
         public async Task JoinRoom(string roomId, string gameType)
@@ -35,9 +37,9 @@ namespace Turnbase.Server.Hubs
                 IGameInstance gameInstance = _gameInstances.GetOrAdd(roomId, key =>
                 {
                     if (gameType == "Battleship")
-                        return new BattleshipGame(_eventDispatcher, _logger);
+                        return new BattleshipGame(_eventDispatcher, _loggerFactory.CreateLogger<BaseGameInstance>());
                     else
-                        return new CoinFlipGame(_eventDispatcher, _logger);
+                        return new CoinFlipGame(_eventDispatcher, _loggerFactory.CreateLogger<BaseGameInstance>());
                 });
 
                 gameInstance.RoomId = roomId;
@@ -150,9 +152,9 @@ namespace Turnbase.Server.Hubs
                 IGameInstance gameInstance = _gameInstances.GetOrAdd(roomId, key =>
                 {
                     if (gameType == "Battleship")
-                        return new BattleshipGame(_eventDispatcher, _logger);
+                        return new BattleshipGame(_eventDispatcher, _loggerFactory.CreateLogger<BaseGameInstance>());
                     else
-                        return new CoinFlipGame(_eventDispatcher, _logger);
+                        return new CoinFlipGame(_eventDispatcher, _loggerFactory.CreateLogger<BaseGameInstance>());
                 });
 
                 gameInstance.RoomId = roomId;
