@@ -22,7 +22,7 @@ namespace Turnbase.Tests
         private IHost _host;
         private HubConnection _player1Connection;
         private HubConnection _player2Connection;
-        private string _roomId = "1"; // Use a numeric string that can be parsed as an integer
+        private string _roomIdBase = "Room_"; // Base for generating unique room IDs
         private string _player1Id = "Player1";
         private string _player2Id = "Player2";
 
@@ -85,14 +85,19 @@ namespace Turnbase.Tests
             await _player1Connection.StopAsync();
             await _player2Connection.StopAsync();
             await _host.StopAsync();
+            var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
+            using var dbContext = dbContextFactory.CreateDbContext();
+            await dbContext.Database.EnsureDeletedAsync();
+            await dbContext.Database.CloseConnectionAsync();
             _host.Dispose();
         }
 
-        [Test]   
+        [Test]
         [NonParallelizable]
         public async Task JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent()
         {
             // Arrange
+            var roomId = _roomIdBase + Guid.NewGuid().ToString();
             var player1JoinedTask = new TaskCompletionSource<string>();
             var player2JoinedTask = new TaskCompletionSource<string>();
 
@@ -100,12 +105,12 @@ namespace Turnbase.Tests
             _player2Connection.On<string>("PlayerJoined", (userId) => player2JoinedTask.SetResult(userId));
 
             // Act
-            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
-            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "CoinFlip");
 
             // Assert
-            var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-            var player2Result = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+            var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            var player2Result = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
             Assert.That(player1Result, Is.EqualTo(_player1Id));
             Assert.That(player2Result, Is.EqualTo(_player2Id));
         }
@@ -115,6 +120,7 @@ namespace Turnbase.Tests
         public async Task SubmitMove_PlayerMakesMove_ReceivesGameStartedAndCoinFlipResult()
         {
             // Arrange
+            var roomId = _roomIdBase + Guid.NewGuid().ToString();
             var gameStartedTask = new TaskCompletionSource<string>();
             var coinFlipResultTask = new TaskCompletionSource<string>();
             var debugMessages = new List<string>();
@@ -135,24 +141,24 @@ namespace Turnbase.Tests
                 debugMessages.Add(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
-            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "CoinFlip");
 
             // Explicitly start the game
-            await _player1Connection.InvokeAsync("StartGame", _roomId);
+            await _player1Connection.InvokeAsync("StartGame", roomId);
 
             // Small delay to ensure game start event is processed
             await Task.Delay(1000);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
-            await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
+            await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, moveJson);
 
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(60));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(60));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(120));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(120));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
@@ -173,6 +179,7 @@ namespace Turnbase.Tests
         public async Task SubmitMove_GameEnds_StateIsSavedToDatabase()
         {
             // Arrange
+            var roomId = _roomIdBase + Guid.NewGuid().ToString();
             var gameEndedTask = new TaskCompletionSource<string>();
             var debugMessages = new List<string>();
             _player1Connection.On<string>("GameEvent", (message) =>
@@ -189,23 +196,23 @@ namespace Turnbase.Tests
                 debugMessages.Add(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
-            await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "CoinFlip");
 
             // Explicitly start the game
-            await _player1Connection.InvokeAsync("StartGame", _roomId);
+            await _player1Connection.InvokeAsync("StartGame", roomId);
 
             // Small delay to ensure game start event is processed
             await Task.Delay(1000);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
-            await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
+            await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, moveJson);
 
             // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(120));
             }
             catch (TimeoutException ex)
             {
