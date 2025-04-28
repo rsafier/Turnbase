@@ -1,5 +1,7 @@
 # Turn-Based Multiplayer Game Engine - Design and Implementation Plan
 
+[![CI/CD Unit Tests](https://github.com/yourusername/yourrepository/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/yourrepository/actions/workflows/ci.yml)
+
 ## Design Overview
 
 The turn-based multiplayer game engine leverages SignalR for real-time communication, designed with modularity, scalability, and testability in mind. The architecture separates game logic, communication, and persistence to facilitate easy extension with new game types and robust testing. The MVP includes two games: a simple Coin Flip game for basic functionality validation and a Battleship-style game for testing complex interactions.
