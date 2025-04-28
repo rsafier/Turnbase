@@ -95,13 +95,32 @@ namespace Turnbase.Tests
                 })
                 .Build();
 
-            // Start connections and set player IDs
+            // Variables to store the actual player IDs from connection
+            var player1IdTask = new TaskCompletionSource<string>();
+            var player2IdTask = new TaskCompletionSource<string>();
+
+            // Listen for any initial message to capture the user ID (we'll use PlayerJoined later in tests)
+            _player1Connection.On<string>("PlayerJoined", (userId) => player1IdTask.TrySetResult(userId));
+            _player2Connection.On<string>("PlayerJoined", (userId) => player2IdTask.TrySetResult(userId));
+
+            // Start connections
             await _player1Connection.StartAsync();
             await _player2Connection.StartAsync();
-            
-            // Set player IDs - use deterministic IDs for testing
-            _player1Id = "TestConnection_Player1";
-            _player2Id = "TestConnection_Player2";
+
+            // Temporary join to a dummy room to trigger PlayerJoined event and capture IDs
+            var tempRoomId = "TempRoom_" + Guid.NewGuid().ToString();
+            await _player1Connection.InvokeAsync("JoinRoom", tempRoomId, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", tempRoomId, "CoinFlip");
+
+            // Wait for and capture the actual player IDs
+            _player1Id = await player1IdTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+            _player2Id = await player2IdTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+
+            // Leave the temporary room
+            await _player1Connection.InvokeAsync("LeaveRoom", tempRoomId);
+            await _player2Connection.InvokeAsync("LeaveRoom", tempRoomId);
+
+            Console.WriteLine($"Captured Player IDs - Player1: {_player1Id}, Player2: {_player2Id}");
         }
 
         [TearDown]
@@ -123,21 +142,33 @@ namespace Turnbase.Tests
         {
             // Arrange
             var roomId = _roomIdBase + Guid.NewGuid().ToString();
-            var player1JoinedTask = new TaskCompletionSource<string>();
-            var player2JoinedTask = new TaskCompletionSource<string>();
+            var player1JoinedTask = new TaskCompletionSource<List<string>>();
+            var player2JoinedTask = new TaskCompletionSource<List<string>>();
+            var player1JoinedPlayers = new List<string>();
+            var player2JoinedPlayers = new List<string>();
 
-            _player1Connection.On<string>("PlayerJoined", (userId) => player1JoinedTask.SetResult(userId));
-            _player2Connection.On<string>("PlayerJoined", (userId) => player2JoinedTask.SetResult(userId));
+            _player1Connection.On<string>("PlayerJoined", (userId) => 
+            {
+                player1JoinedPlayers.Add(userId);
+                if (player1JoinedPlayers.Count == 2) player1JoinedTask.SetResult(player1JoinedPlayers);
+            });
+            _player2Connection.On<string>("PlayerJoined", (userId) => 
+            {
+                player2JoinedPlayers.Add(userId);
+                if (player2JoinedPlayers.Count == 2) player2JoinedTask.SetResult(player2JoinedPlayers);
+            });
 
             // Act
             await _player1Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
             await _player2Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
 
             // Assert
-            var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-            var player2Result = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-            Assert.That(player1Result, Is.EqualTo(_player1Id));
-            Assert.That(player2Result, Is.EqualTo(_player2Id));
+            var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+            var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+            Assert.That(player1Results, Contains.Item(_player1Id));
+            Assert.That(player1Results, Contains.Item(_player2Id));
+            Assert.That(player2Results, Contains.Item(_player1Id));
+            Assert.That(player2Results, Contains.Item(_player2Id));
         }
 
         [NonParallelizable]
