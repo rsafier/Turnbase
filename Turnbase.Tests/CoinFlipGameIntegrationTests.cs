@@ -117,8 +117,13 @@ namespace Turnbase.Tests
             var gameStartedTask = new TaskCompletionSource<string>();
             var coinFlipResultTask = new TaskCompletionSource<string>();
 
-            _player1Connection.On<string>("GameStarted", (message) => gameStartedTask.TrySetResult(message));
-            _player1Connection.On<string>("CoinFlipResult", (message) => coinFlipResultTask.TrySetResult(message));
+            _player1Connection.On<string>("ReceiveMessage", (message) => 
+            {
+                if (message.Contains("GameStarted"))
+                    gameStartedTask.TrySetResult(message);
+                if (message.Contains("CoinFlipResult"))
+                    coinFlipResultTask.TrySetResult(message);
+            });
 
             await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id);
             await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id);
@@ -144,7 +149,11 @@ namespace Turnbase.Tests
         {
             // Arrange
             var gameEndedTask = new TaskCompletionSource<string>();
-            _player1Connection.On<string>("GameEnded", (message) => gameEndedTask.TrySetResult(message));
+            _player1Connection.On<string>("ReceiveMessage", (message) => 
+            {
+                if (message.Contains("GameEnded"))
+                    gameEndedTask.TrySetResult(message);
+            });
 
             await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id);
             await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id);
