@@ -16,7 +16,7 @@ namespace Turnbase.Tests
         private GameEventDispatcher _dispatcher;
         private Mock<IHubContext<GameHub>> _mockHubContext;
         private Mock<IHubClients> _mockClients;
-        private Mock<IClientProxy> _mockClientProxy;
+        private Mock<ISingleClientProxy> _mockClientProxy;
         private Mock<GameContext> _mockGameContext;
         private ConcurrentDictionary<string, string> _connectedPlayers;
 
@@ -25,12 +25,12 @@ namespace Turnbase.Tests
         {
             _mockHubContext = new Mock<IHubContext<GameHub>>();
             _mockClients = new Mock<IHubClients>();
-            _mockClientProxy = new Mock<IClientProxy>();
+            _mockClientProxy = new Mock<ISingleClientProxy>();
             _mockGameContext = new Mock<GameContext>();
             _connectedPlayers = new ConcurrentDictionary<string, string>();
 
             _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
-            _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
+            _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object as IClientProxy);
             _mockClients.Setup(c => c.Client(It.IsAny<string>())).Returns(_mockClientProxy.Object);
 
             _dispatcher = new GameEventDispatcher(_mockHubContext.Object, _mockGameContext.Object);
