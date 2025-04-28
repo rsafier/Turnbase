@@ -25,9 +25,11 @@ namespace Turnbase.Tests
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Allow anonymous access for testing purposes
-            // Use a static counter to assign unique player IDs for testing
+            // Use a static counter to assign player IDs, resetting for each test run if needed
             var playerNumber = Interlocked.Increment(ref _connectionCounter);
-            var userId = $"TestConnection_Player{playerNumber}";
+            // Ensure only two players for testing by cycling between 1 and 2
+            var adjustedPlayerNumber = (playerNumber % 2 == 0) ? 2 : 1;
+            var userId = $"TestConnection_Player{adjustedPlayerNumber}";
             Console.WriteLine($"Assigning user ID: {userId} for connection attempt {playerNumber}");
             var claims = new[] { new Claim(ClaimTypes.Name, userId) };
             var identity = new ClaimsIdentity(claims, Scheme.Name);

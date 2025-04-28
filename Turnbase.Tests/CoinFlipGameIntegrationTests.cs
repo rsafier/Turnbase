@@ -134,8 +134,8 @@ namespace Turnbase.Tests
             await _player2Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
 
             // Assert
-            var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-            var player2Result = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+            var player2Result = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
             Assert.That(player1Result, Is.EqualTo(_player1Id));
             Assert.That(player2Result, Is.EqualTo(_player2Id));
         }
@@ -182,8 +182,8 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
@@ -234,10 +234,10 @@ namespace Turnbase.Tests
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             await _player1Connection.InvokeAsync("SubmitMove", roomId, moveJson);
 
-            // Wait for game to end with a longer timeout
+            // Wait for game to end with a shorter timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
             }
             catch (TimeoutException ex)
             {
