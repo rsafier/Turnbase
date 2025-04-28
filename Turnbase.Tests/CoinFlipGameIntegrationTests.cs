@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Turnbase.Server.Data;
 using Turnbase.Server.GameLogic;
 using Turnbase.Server.Hubs;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 using System.Collections.Concurrent;
 
