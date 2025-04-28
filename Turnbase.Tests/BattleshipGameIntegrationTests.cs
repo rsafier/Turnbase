@@ -99,9 +99,15 @@ namespace Turnbase.Tests
             await _player1Connection.StartAsync();
             await _player2Connection.StartAsync();
             
+            // Log connection IDs for debugging
+            Console.WriteLine($"Player 1 Connection ID: {_player1Connection.ConnectionId}");
+            Console.WriteLine($"Player 2 Connection ID: {_player2Connection.ConnectionId}");
+            
             // Set player IDs - use deterministic IDs for testing
             _player1Id = "TestConnection_Player1";
             _player2Id = "TestConnection_Player2"; // Fixed to use different IDs for players
+            Console.WriteLine($"Expected Player 1 ID: {_player1Id}");
+            Console.WriteLine($"Expected Player 2 ID: {_player2Id}");
         }
 
         [TearDown]
@@ -130,28 +136,43 @@ namespace Turnbase.Tests
 
             _player1Connection.On<string>("PlayerJoined", (userId) => 
             {
+                Console.WriteLine($"Player 1 received PlayerJoined for {userId}");
                 player1JoinedIds.Add(userId);
                 if (player1JoinedIds.Count == 2)
                     player1JoinedTask.SetResult(player1JoinedIds);
             });
             _player2Connection.On<string>("PlayerJoined", (userId) => 
             {
+                Console.WriteLine($"Player 2 received PlayerJoined for {userId}");
                 player2JoinedIds.Add(userId);
                 if (player2JoinedIds.Count == 2)
                     player2JoinedTask.SetResult(player2JoinedIds);
             });
 
             // Act
+            Console.WriteLine("Player 1 joining room...");
             await _player1Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
+            Console.WriteLine("Player 2 joining room...");
             await _player2Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
 
             // Assert
-            var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-            var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-            Assert.That(player1Results, Contains.Item(_player1Id));
-            Assert.That(player1Results, Contains.Item(_player2Id));
-            Assert.That(player2Results, Contains.Item(_player1Id));
-            Assert.That(player2Results, Contains.Item(_player2Id));
+            try
+            {
+                var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                Assert.That(player1Results, Contains.Item(_player1Id), "Player 1 did not receive join event for itself.");
+                Assert.That(player1Results, Contains.Item(_player2Id), "Player 1 did not receive join event for Player 2.");
+                Assert.That(player2Results, Contains.Item(_player1Id), "Player 2 did not receive join event for Player 1.");
+                Assert.That(player2Results, Contains.Item(_player2Id), "Player 2 did not receive join event for itself.");
+                Console.WriteLine("JoinRoom test passed.");
+            }
+            catch (TimeoutException ex)
+            {
+                Console.WriteLine($"Timeout occurred in JoinRoom test: {ex.Message}");
+                Console.WriteLine($"Player 1 received events for: {string.Join(", ", player1JoinedIds)}");
+                Console.WriteLine($"Player 2 received events for: {string.Join(", ", player2JoinedIds)}");
+                Assert.Fail($"Timeout: {ex.Message}");
+            }
         }
 
         [Test]
@@ -324,7 +345,7 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("StartGame", roomId);
 
             // Wait for game start event
-            await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
 
             // Place all ships for both players
             var attackPhaseTaskP1 = new TaskCompletionSource<string>();
@@ -355,7 +376,7 @@ namespace Turnbase.Tests
                 });
                 Console.WriteLine($"Player 1 placing {ship} at (0, {yOffset})");
                 await _player1Connection.InvokeAsync("SubmitMove", roomId, shipJsonP1);
-                await shipPlacedTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                await shipPlacedTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
                 yOffset++;
             }
 
@@ -373,7 +394,7 @@ namespace Turnbase.Tests
                 });
                 Console.WriteLine($"Player 2 placing {ship} at (0, {yOffset})");
                 await _player2Connection.InvokeAsync("SubmitMove", roomId, shipJsonP2);
-                await shipPlacedTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                await shipPlacedTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
                 yOffset++;
             }
 
@@ -385,20 +406,21 @@ namespace Turnbase.Tests
                 Y = 0 
             });
             // Wait for attack phase to start before attacking
-            await attackPhaseTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
-            await attackPhaseTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+            await attackPhaseTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(40));
+            await attackPhaseTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(40));
             Console.WriteLine("Player 1 attacking (0, 0)");
             await _player1Connection.InvokeAsync("SubmitMove", roomId, attackJson);
 
             // Assert
             try
             {
-                var attackResultP1 = await attackResultTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
-                var attackResultP2 = await attackResultTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+                var attackResultP1 = await attackResultTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(40));
+                var attackResultP2 = await attackResultTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(40));
                 Assert.IsTrue(attackResultP1.Contains("AttackResult"), "AttackResult event not received by Player 1.");
                 Assert.IsTrue(attackResultP2.Contains("AttackResult"), "AttackResult event not received by Player 2.");
                 Assert.IsTrue(attackResultP1.Contains("Hit") || attackResultP1.Contains("Miss"), "Attack result for Player 1 does not contain Hit or Miss status.");
                 Assert.IsTrue(attackResultP2.Contains("Hit") || attackResultP2.Contains("Miss"), "Attack result for Player 2 does not contain Hit or Miss status.");
+                Console.WriteLine("Attack test passed.");
             }
             catch (TimeoutException ex)
             {

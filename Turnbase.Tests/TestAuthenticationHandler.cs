@@ -23,6 +23,7 @@ namespace Turnbase.Tests
             // Allow anonymous access for testing purposes
             // Use a deterministic identifier for the connection
             var connectionId = Context.Items.ContainsKey("ConnectionId") ? Context.Items["ConnectionId"].ToString() : "TestConnection_Player" + (Context.Items.Count + 1);
+            Console.WriteLine($"Assigning user ID: {connectionId} for authentication");
             var claims = new[] { new Claim(ClaimTypes.Name, connectionId) };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);

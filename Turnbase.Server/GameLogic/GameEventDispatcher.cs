@@ -26,11 +26,13 @@ namespace Turnbase.Server.GameLogic
         {
             try
             {
+                Console.WriteLine($"Broadcasting event to group {RoomId}: {eventJson}");
                 await _hubContext.Clients.Group(RoomId).SendAsync("GameEvent", eventJson);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error broadcasting event to group {RoomId}: {ex.Message}");
                 return false;
             }
         }
@@ -39,11 +41,13 @@ namespace Turnbase.Server.GameLogic
         {
             try
             {
+                Console.WriteLine($"Sending event to user {userId}: {eventJson}");
                 await _hubContext.Clients.User(userId).SendAsync("GameEvent", eventJson);
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
+                Console.WriteLine($"Error sending event to user {userId}: {ex.Message}");
                 return false;
             }
         }
