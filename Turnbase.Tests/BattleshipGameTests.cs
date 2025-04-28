@@ -16,7 +16,8 @@ namespace Turnbase.Tests
         public void Setup()
         {
             _mockDispatcher = new Mock<IGameEventDispatcher>();
-            _game = new BattleshipGame(_mockDispatcher.Object);
+            var mockLogger = new Mock<ILogger<BaseGameInstance>>();
+            _game = new BattleshipGame(_mockDispatcher.Object, mockLogger.Object);
         }
 
         [Test]

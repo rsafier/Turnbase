@@ -4,6 +4,7 @@ using NUnit.Framework;
 using System.Threading.Tasks;
 using Turnbase.Server.GameLogic;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Logging;
 
 namespace Turnbase.Tests
 {
