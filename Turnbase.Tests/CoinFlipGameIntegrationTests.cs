@@ -266,7 +266,7 @@ namespace Turnbase.Tests
         private string _lastSavedState = string.Empty;
 
         public string RoomId { get; set; } = "TestRoom";
-        public List<string> ConnectedPlayers { get; set; } = new List<string>();
+        public ConcurrentDictionary<string, string> ConnectedPlayers { get; set; } = new ConcurrentDictionary<string, string>();
 
         public TestGameEventDispatcher(IDbContextFactory<GameContext> dbContextFactory)
         {
