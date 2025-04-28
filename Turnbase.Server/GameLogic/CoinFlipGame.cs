@@ -31,6 +31,11 @@ namespace Turnbase.Server.GameLogic
             _isGameActive = false;
             var endEvent = new { EventType = "GameEnded", Winner = _winner };
             await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(endEvent));
+            
+            // Save the final game state
+            var finalState = new { GameType = "CoinFlip", Winner = _winner, IsActive = _isGameActive, TurnCount = TurnCount };
+            await EventDispatcher.SaveGameStateAsync(JsonConvert.SerializeObject(finalState));
+            
             return await base.StopAsync();
         }
 

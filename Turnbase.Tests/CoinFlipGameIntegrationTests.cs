@@ -117,8 +117,9 @@ namespace Turnbase.Tests
             var gameStartedTask = new TaskCompletionSource<string>();
             var coinFlipResultTask = new TaskCompletionSource<string>();
 
-            _player1Connection.On<string>("ReceiveMessage", (message) => 
+            _player1Connection.On<string>("GameEvent", (message) =>
             {
+                Console.WriteLine($"Player1 Received (GameEvent): {message}");
                 if (message.Contains("GameStarted"))
                     gameStartedTask.TrySetResult(message);
                 if (message.Contains("CoinFlipResult"))
@@ -137,11 +138,19 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
 
             // Assert
-            var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-            var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-            Assert.IsTrue(gameStartedResult.Contains("GameStarted"));
-            Assert.IsTrue(resultMessage.Contains("CoinFlipResult"));
-            Assert.IsTrue(resultMessage.Contains("Winner"));
+            try
+            {
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
+                Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
+                Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
+            }
+            catch (TimeoutException ex)
+            {
+                Console.WriteLine("Timeout occurred. Check logs for received messages.");
+                Assert.Fail($"Timeout: {ex.Message}");
+            }
         }
 
         [Test]
@@ -149,8 +158,9 @@ namespace Turnbase.Tests
         {
             // Arrange
             var gameEndedTask = new TaskCompletionSource<string>();
-            _player1Connection.On<string>("ReceiveMessage", (message) => 
+            _player1Connection.On<string>("GameEvent", (message) =>
             {
+                Console.WriteLine($"Player1 Received (GameEvent): {message}");
                 if (message.Contains("GameEnded"))
                     gameEndedTask.TrySetResult(message);
             });
@@ -167,7 +177,15 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
 
             // Wait for game to end
-            await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            try
+            {
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            }
+            catch (TimeoutException ex)
+            {
+                Console.WriteLine("Timeout occurred waiting for GameEnded. Check logs for received messages.");
+                Assert.Fail($"Timeout: {ex.Message}");
+            }
 
             // Check database state
             var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
@@ -175,8 +193,6 @@ namespace Turnbase.Tests
             var gameState = await dbContext.GameStates.FirstOrDefaultAsync();
 
             // Assert
-            // Note: This test might still fail if GameEventDispatcher doesn't save state.
-            // If it fails, we need to ensure the dispatcher implementation saves to DB.
             if (gameState == null)
             {
                 Assert.Inconclusive("Game state was not saved to database. Ensure GameEventDispatcher.SaveGameStateAsync is implemented to save state.");
