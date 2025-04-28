@@ -14,8 +14,8 @@ namespace Turnbase.Tests
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            TimeProvider timeProvider)
-            : base(options, logger, encoder, timeProvider)
+            ISystemClock clock)
+            : base(options, logger, encoder, clock)
         {
         }
 
