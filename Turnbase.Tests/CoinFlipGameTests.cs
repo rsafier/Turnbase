@@ -18,7 +18,8 @@ namespace Turnbase.Tests
         {
             _mockDispatcher = new Mock<IGameEventDispatcher>();
             _mockDispatcher.Setup(d => d.ConnectedPlayers).Returns(new ConcurrentDictionary<string, string>());
-            _game = new CoinFlipGame(_mockDispatcher.Object);
+            var mockLogger = new Mock<ILogger<BaseGameInstance>>();
+            _game = new CoinFlipGame(_mockDispatcher.Object, mockLogger.Object);
         }
 
         [Test]
