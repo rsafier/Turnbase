@@ -134,7 +134,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   **Note**: Comprehensive logging has been added to `GameHub`, `BaseGameInstance`, `BattleshipGame`, and `CoinFlipGame`. Error handling with try-catch blocks is in place across all major components.
 
 - [X] **Performance Optimization**  
-  **Status**: Completed  
+  **Status**: Completed and Tested  
   - Optimize SignalR message frequency by batching updates.  
   - Use asynchronous operations for I/O tasks.
 
@@ -182,11 +182,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 ## Progress Notes
 
-- **Current Phase**: Phase 4 - Engine Enhancements and Polish  
+- **Current Phase**: Phase 5 - Documentation and Deployment  
 - **Next Steps**:  
-  1. Test the performance optimizations for SignalR message batching and asynchronous operations.  
-  2. Begin Phase 5 by documenting public interfaces, hub methods, and providing game rules and setup instructions.  
-- **Updates**: Performance optimization has been completed with SignalR message batching and asynchronous operations for I/O tasks. Error handling and logging are fully implemented across game logic and hub components using try-catch blocks and `ILogger`. All tests are passing with warnings related to test output verbosity. The project continues in Phase 4, focusing on testing the optimizations before moving to documentation and deployment in Phase 5.
+  1. Document public interfaces, hub methods, and provide game rules and setup instructions for Coin Flip and Battleship.  
+  2. Deploy to a test environment (Azure App Service or local server with Docker) and perform load testing with multiple concurrent game rooms.  
+- **Updates**: Performance optimization testing has been completed successfully with SignalR message batching and asynchronous operations for I/O tasks. Error handling and logging are fully implemented across game logic and hub components using try-catch blocks and `ILogger`. All tests are passing with warnings related to test output verbosity. The project has moved to Phase 5, focusing on documentation and deployment.
 
 ## Conclusion
 
