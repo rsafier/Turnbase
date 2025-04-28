@@ -150,12 +150,12 @@ namespace Turnbase.Tests
             _player1Connection.On<string>("PlayerJoined", (userId) => 
             {
                 player1JoinedPlayers.Add(userId);
-                if (player1JoinedPlayers.Count == 2) player1JoinedTask.SetResult(player1JoinedPlayers);
+                if (player1JoinedPlayers.Count == 2) player1JoinedTask.TrySetResult(player1JoinedPlayers);
             });
             _player2Connection.On<string>("PlayerJoined", (userId) => 
             {
                 player2JoinedPlayers.Add(userId);
-                if (player2JoinedPlayers.Count == 2) player2JoinedTask.SetResult(player2JoinedPlayers);
+                if (player2JoinedPlayers.Count == 2) player2JoinedTask.TrySetResult(player2JoinedPlayers);
             });
 
             // Act
@@ -163,12 +163,23 @@ namespace Turnbase.Tests
             await _player2Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
 
             // Assert
-            var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-            var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-            Assert.That(player1Results, Contains.Item(_player1Id));
-            Assert.That(player1Results, Contains.Item(_player2Id));
-            Assert.That(player2Results, Contains.Item(_player1Id));
-            Assert.That(player2Results, Contains.Item(_player2Id));
+            try {
+                var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+                var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+                Assert.That(player1Results.Count, Is.EqualTo(2), "Player 1 should receive 2 PlayerJoined events");
+                Assert.That(player2Results.Count, Is.EqualTo(2), "Player 2 should receive 2 PlayerJoined events");
+                Assert.That(player1Results, Contains.Item(_player1Id), "Player 1 should receive event for self");
+                Assert.That(player1Results, Contains.Item(_player2Id), "Player 1 should receive event for other player");
+                Assert.That(player2Results, Contains.Item(_player1Id), "Player 2 should receive event for other player");
+                Assert.That(player2Results, Contains.Item(_player2Id), "Player 2 should receive event for self");
+            }
+            catch (TimeoutException ex)
+            {
+                Console.WriteLine($"Timeout occurred in JoinRoom test: {ex.Message}");
+                Console.WriteLine($"Player 1 received events for: {string.Join(", ", player1JoinedPlayers)}");
+                Console.WriteLine($"Player 2 received events for: {string.Join(", ", player2JoinedPlayers)}");
+                Assert.Fail($"Timeout occurred: {ex.Message}");
+            }
         }
 
         [NonParallelizable]
