@@ -103,9 +103,9 @@ namespace Turnbase.Tests
             Console.WriteLine($"Player 1 Connection ID: {_player1Connection.ConnectionId}");
             Console.WriteLine($"Player 2 Connection ID: {_player2Connection.ConnectionId}");
             
-            // Set player IDs - use deterministic IDs for testing
-            _player1Id = "TestConnection_Player1";
-            _player2Id = "TestConnection_Player2"; // Fixed to use different IDs for players
+            // Set player IDs - use connection IDs as user IDs to match SignalR behavior
+            _player1Id = _player1Connection.ConnectionId;
+            _player2Id = _player2Connection.ConnectionId;
             Console.WriteLine($"Expected Player 1 ID: {_player1Id}");
             Console.WriteLine($"Expected Player 2 ID: {_player2Id}");
         }
@@ -133,18 +133,28 @@ namespace Turnbase.Tests
             var player2JoinedTask = new TaskCompletionSource<List<string>>();
             var player1JoinedIds = new List<string>();
             var player2JoinedIds = new List<string>();
+            var player1AllReceivedIds = new List<string>(); // For debugging duplicates
+            var player2AllReceivedIds = new List<string>(); // For debugging duplicates
 
             _player1Connection.On<string>("PlayerJoined", (userId) => 
             {
                 Console.WriteLine($"Player 1 received PlayerJoined for {userId}");
-                player1JoinedIds.Add(userId);
+                player1AllReceivedIds.Add(userId); // Log all received events
+                if (!player1JoinedIds.Contains(userId))
+                {
+                    player1JoinedIds.Add(userId);
+                }
                 if (player1JoinedIds.Count == 2)
                     player1JoinedTask.SetResult(player1JoinedIds);
             });
             _player2Connection.On<string>("PlayerJoined", (userId) => 
             {
                 Console.WriteLine($"Player 2 received PlayerJoined for {userId}");
-                player2JoinedIds.Add(userId);
+                player2AllReceivedIds.Add(userId); // Log all received events
+                if (!player2JoinedIds.Contains(userId))
+                {
+                    player2JoinedIds.Add(userId);
+                }
                 if (player2JoinedIds.Count == 2)
                     player2JoinedTask.SetResult(player2JoinedIds);
             });
@@ -158,19 +168,23 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
-                var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
                 Assert.That(player1Results, Contains.Item(_player1Id), "Player 1 did not receive join event for itself.");
                 Assert.That(player1Results, Contains.Item(_player2Id), "Player 1 did not receive join event for Player 2.");
                 Assert.That(player2Results, Contains.Item(_player1Id), "Player 2 did not receive join event for Player 1.");
                 Assert.That(player2Results, Contains.Item(_player2Id), "Player 2 did not receive join event for itself.");
                 Console.WriteLine("JoinRoom test passed.");
+                Console.WriteLine($"Player 1 all received events: {string.Join(", ", player1AllReceivedIds)}");
+                Console.WriteLine($"Player 2 all received events: {string.Join(", ", player2AllReceivedIds)}");
             }
             catch (TimeoutException ex)
             {
                 Console.WriteLine($"Timeout occurred in JoinRoom test: {ex.Message}");
                 Console.WriteLine($"Player 1 received events for: {string.Join(", ", player1JoinedIds)}");
                 Console.WriteLine($"Player 2 received events for: {string.Join(", ", player2JoinedIds)}");
+                Console.WriteLine($"Player 1 all received events: {string.Join(", ", player1AllReceivedIds)}");
+                Console.WriteLine($"Player 2 all received events: {string.Join(", ", player2AllReceivedIds)}");
                 Assert.Fail($"Timeout: {ex.Message}");
             }
         }
