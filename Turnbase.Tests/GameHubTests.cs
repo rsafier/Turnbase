@@ -13,7 +13,7 @@ namespace Turnbase.Tests
     [TestFixture]
     public class GameHubTests
     {
-        private Mock<IHubCallerClients> _mockClients;
+        private Mock<IHubClients> _mockClients;
         private Mock<IHubContext<GameHub>> _mockHubContext;
         private Mock<IGroupManager> _mockGroups;
         private Mock<IGameEventDispatcher> _mockEventDispatcher;
@@ -23,7 +23,7 @@ namespace Turnbase.Tests
         [SetUp]
         public void Setup()
         {
-            _mockClients = new Mock<IHubCallerClients>();
+            _mockClients = new Mock<IHubClients>();
             _mockGroups = new Mock<IGroupManager>();
             _mockHubContext = new Mock<IHubContext<GameHub>>();
             _mockEventDispatcher = new Mock<IGameEventDispatcher>();
