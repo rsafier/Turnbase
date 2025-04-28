@@ -230,19 +230,13 @@ namespace Turnbase.Tests
                 Assert.Fail($"Timeout: {ex.Message}");
             }
 
-            // Check database state with minimal retry to account for async save
+            // Check database state immediately
             var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
-            Turnbase.Server.Models.GameState gameState = null;
-            for (int i = 0; i < 3; i++)
-            {
-                using var dbContext = dbContextFactory.CreateDbContext();
-                gameState = await dbContext.GameStates.FirstOrDefaultAsync();
-                if (gameState != null) break;
-                await Task.Delay(200); // Short wait for async save operation
-            }
+            using var dbContext = dbContextFactory.CreateDbContext();
+            var gameState = await dbContext.GameStates.FirstOrDefaultAsync();
 
             // Assert
-            Assert.IsNotNull(gameState, "Game state was not saved to database after retries. Ensure GameEventDispatcher.SaveGameStateAsync is implemented to save state.");
+            Assert.IsNotNull(gameState, "Game state was not saved to database. Ensure GameEventDispatcher.SaveGameStateAsync is implemented to save state.");
             Assert.IsTrue(gameState.StateJson.Contains("CoinFlip"), "Game state JSON does not contain expected content.");
         }
     }
@@ -309,7 +303,7 @@ namespace Turnbase.Tests
             };
             dbContext.GameStates.Add(gameState);
             await dbContext.SaveChangesAsync();
-            Console.WriteLine($"Saved game state: {stateJson.Substring(0, Math.Min(stateJson.Length, 50))}...");
+            Console.WriteLine($"Saved game state for RoomId: {RoomId}");
             return true;
         }
 
