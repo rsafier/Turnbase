@@ -69,7 +69,7 @@ namespace Turnbase.Tests
 
             // Assert
             _mockGroups.Verify(g => g.AddToGroupAsync("Connection1", roomId, CancellationToken.None), Times.Once);
-            _mockEventDispatcher.VerifySet(d => d.RoomId = roomId, Times.Once);
+            _mockEventDispatcher.VerifySet(d => d.RoomId = roomId, Times.Exactly(2));
             _mockEventDispatcher.Verify(d => d.ConnectedPlayers.TryAdd("TestUser1", "Connection1"), Times.Once);
             mockGroupClients.Verify(c => c.SendCoreAsync("PlayerJoined", new object[] { "TestUser1" }, CancellationToken.None), Times.Once);
         }
