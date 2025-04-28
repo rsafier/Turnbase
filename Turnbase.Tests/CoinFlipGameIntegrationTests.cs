@@ -31,7 +31,8 @@ namespace Turnbase.Tests
             // Setup test host with SignalR and in-memory database
             var builder = WebApplication.CreateBuilder();
             builder.Services.AddSignalR();
-            builder.Services.AddDbContext<GameContext>(options =>
+            // Configure GameContext with a factory to handle constructor issues
+            builder.Services.AddDbContextFactory<GameContext>(options =>
                 options.UseSqlite("Data Source=:memory:"));
             builder.Services.AddSingleton<IGameInstance>(sp => new CoinFlipGame(sp.GetRequiredService<IGameEventDispatcher>()));
             builder.Services.AddSingleton<IGameEventDispatcher, GameEventDispatcher>();
@@ -48,8 +49,9 @@ namespace Turnbase.Tests
             _host = app;
             await _host.StartAsync();
 
-            // Open database connection for in-memory SQLite
-            var dbContext = _host.Services.GetRequiredService<GameContext>();
+            // Open database connection for in-memory SQLite using factory
+            var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
+            using var dbContext = dbContextFactory.CreateDbContext();
             await dbContext.Database.OpenConnectionAsync();
             await dbContext.Database.EnsureCreatedAsync();
 
@@ -132,7 +134,8 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
 
             // Act
-            var dbContext = _host.Services.GetRequiredService<GameContext>();
+            var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
+            using var dbContext = dbContextFactory.CreateDbContext();
             var gameState = await dbContext.GameStates.FirstOrDefaultAsync();
 
             // Assert
