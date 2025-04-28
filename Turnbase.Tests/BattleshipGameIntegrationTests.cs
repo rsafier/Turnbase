@@ -123,21 +123,35 @@ namespace Turnbase.Tests
         {
             // Arrange
             var roomId = _roomIdBase + Guid.NewGuid().ToString();
-            var player1JoinedTask = new TaskCompletionSource<string>();
-            var player2JoinedTask = new TaskCompletionSource<string>();
+            var player1JoinedTask = new TaskCompletionSource<List<string>>();
+            var player2JoinedTask = new TaskCompletionSource<List<string>>();
+            var player1JoinedIds = new List<string>();
+            var player2JoinedIds = new List<string>();
 
-            _player1Connection.On<string>("PlayerJoined", (userId) => player1JoinedTask.SetResult(userId));
-            _player2Connection.On<string>("PlayerJoined", (userId) => player2JoinedTask.SetResult(userId));
+            _player1Connection.On<string>("PlayerJoined", (userId) => 
+            {
+                player1JoinedIds.Add(userId);
+                if (player1JoinedIds.Count == 2)
+                    player1JoinedTask.SetResult(player1JoinedIds);
+            });
+            _player2Connection.On<string>("PlayerJoined", (userId) => 
+            {
+                player2JoinedIds.Add(userId);
+                if (player2JoinedIds.Count == 2)
+                    player2JoinedTask.SetResult(player2JoinedIds);
+            });
 
             // Act
             await _player1Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
             await _player2Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
 
             // Assert
-            var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-            var player2Result = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-            Assert.That(player1Result, Is.EqualTo(_player1Id));
-            Assert.That(player2Result, Is.EqualTo(_player2Id));
+            var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            Assert.That(player1Results, Contains.Item(_player1Id));
+            Assert.That(player1Results, Contains.Item(_player2Id));
+            Assert.That(player2Results, Contains.Item(_player1Id));
+            Assert.That(player2Results, Contains.Item(_player2Id));
         }
 
         [Test]
@@ -313,6 +327,20 @@ namespace Turnbase.Tests
             await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
 
             // Place all ships for both players
+            var attackPhaseTaskP1 = new TaskCompletionSource<string>();
+            var attackPhaseTaskP2 = new TaskCompletionSource<string>();
+
+            _player1Connection.On<string>("GameEvent", (message) =>
+            {
+                if (message.Contains("AttackPhaseStarted"))
+                    attackPhaseTaskP1.TrySetResult(message);
+            });
+            
+            _player2Connection.On<string>("GameEvent", (message) =>
+            {
+                if (message.Contains("AttackPhaseStarted"))
+                    attackPhaseTaskP2.TrySetResult(message);
+            });
             int yOffset = 0;
             foreach (var ship in shipsToPlace)
             {
@@ -356,6 +384,9 @@ namespace Turnbase.Tests
                 X = 0, 
                 Y = 0 
             });
+            // Wait for attack phase to start before attacking
+            await attackPhaseTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+            await attackPhaseTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
             Console.WriteLine("Player 1 attacking (0, 0)");
             await _player1Connection.InvokeAsync("SubmitMove", roomId, attackJson);
 
