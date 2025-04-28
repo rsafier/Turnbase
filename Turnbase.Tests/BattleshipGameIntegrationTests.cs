@@ -104,8 +104,8 @@ namespace Turnbase.Tests
             Console.WriteLine($"Player 2 Connection ID: {_player2Connection.ConnectionId}");
             
             // Set player IDs - use connection IDs as user IDs to match SignalR behavior
-            _player1Id = _player1Connection.ConnectionId;
-            _player2Id = _player2Connection.ConnectionId;
+            _player1Id = _player1Connection.ConnectionId ?? "Player1";
+            _player2Id = _player2Connection.ConnectionId ?? "Player2";
             Console.WriteLine($"Expected Player 1 ID: {_player1Id}");
             Console.WriteLine($"Expected Player 2 ID: {_player2Id}");
         }
@@ -447,12 +447,12 @@ namespace Turnbase.Tests
             }
         }
 
-        private string ExtractShipTypeFromMessage(string message)
+        private string? ExtractShipTypeFromMessage(string message)
         {
             try
             {
                 var json = JsonConvert.DeserializeObject<dynamic>(message);
-                return json.ShipType;
+                return json?.ShipType?.ToString();
             }
             catch
             {
