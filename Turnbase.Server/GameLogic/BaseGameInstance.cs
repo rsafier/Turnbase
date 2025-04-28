@@ -4,12 +4,13 @@ namespace Turnbase.Server.GameLogic
 {
     public abstract class BaseGameInstance : IGameInstance
     {
-        public string RoomId { get; protected set; } = string.Empty;
+        public string RoomId { get; set; } = string.Empty;
         public long TurnCount { get; protected set; } = 0;
         public IGameEventDispatcher EventDispatcher { get; set; } = null!;
 
-        public BaseGameInstance()
+        public BaseGameInstance(IGameEventDispatcher eventDispatcher)
         {
+            EventDispatcher = eventDispatcher;
         }
 
         public virtual async Task<bool> StartAsync()

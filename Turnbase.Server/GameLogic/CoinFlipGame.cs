@@ -10,6 +10,10 @@ namespace Turnbase.Server.GameLogic
         private string _winner = string.Empty;
         private bool _isGameActive = false;
 
+        public CoinFlipGame(IGameEventDispatcher eventDispatcher) : base(eventDispatcher)
+        {
+        }
+
         public override async Task<bool> StartAsync()
         {
             await base.StartAsync();

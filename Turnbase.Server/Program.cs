@@ -21,7 +21,11 @@ builder.Services.AddDbContext<GameContext>(options =>
 
 // Register Game Services - Scoped to allow for multiple game instances
 builder.Services.AddScoped<IGameEventDispatcher, GameEventDispatcher>();
-builder.Services.AddScoped<IGameInstance, CoinFlipGame>(); // Default game, can be overridden per request if needed
+builder.Services.AddScoped<IGameInstance>(provider => 
+{
+    var dispatcher = provider.GetRequiredService<IGameEventDispatcher>();
+    return new CoinFlipGame(dispatcher);
+}); // Default game, can be overridden per request if needed
 
 var app = builder.Build();
 
