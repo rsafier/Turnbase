@@ -216,8 +216,8 @@ namespace Turnbase.Tests
                 debugMessages.Add(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "Battleship");
-            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "Battleship");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
 
             // Start the game
             await _player1Connection.InvokeAsync("StartGame", roomId);
