@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Turnbase.Server.GameLogic;
+using System.Collections.Concurrent;
 
 namespace Turnbase.Tests
 {
@@ -16,6 +17,7 @@ namespace Turnbase.Tests
         public void Setup()
         {
             _mockDispatcher = new Mock<IGameEventDispatcher>();
+            _mockDispatcher.Setup(d => d.ConnectedPlayers).Returns(new ConcurrentDictionary<string, string>());
             _game = new CoinFlipGame(_mockDispatcher.Object);
         }
 
@@ -45,6 +47,22 @@ namespace Turnbase.Tests
             // Assert
             Assert.IsTrue(result);
             _mockDispatcher.Verify(d => d.BroadcastAsync(It.Is<string>(s => s.Contains("GameEnded"))), Times.Once);
+        }
+
+        [Test]
+        public async Task ProcessPlayerEventAsync_GameNotActive_DoesNotProcessEvent()
+        {
+            // Arrange
+            var userId = "Player1";
+            var messageJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
+            _mockDispatcher.Setup(d => d.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+
+            // Act
+            await _game.ProcessPlayerEventAsync(userId, messageJson);
+
+            // Assert
+            _mockDispatcher.Verify(d => d.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
+            _mockDispatcher.Verify(d => d.BroadcastAsync(It.IsAny<string>()), Times.Never);
         }
 
         [Test]
@@ -98,6 +116,43 @@ namespace Turnbase.Tests
 
             // Assert
             _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Error"))), Times.Once);
+        }
+
+        [Test]
+        public async Task ProcessPlayerEventAsync_MalformedJson_SendsErrorMessage()
+        {
+            // Arrange
+            var userId = "Player1";
+            var messageJson = "invalid json";
+            _mockDispatcher.Setup(d => d.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+
+            // Act
+            await _game.StartAsync();
+            await _game.ProcessPlayerEventAsync(userId, messageJson);
+
+            // Assert
+            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Error"))), Times.Once);
+        }
+
+        [Test]
+        public async Task ProcessPlayerEventAsync_OpponentDetermination_WorksWithMultiplePlayers()
+        {
+            // Arrange
+            var userId = "Player1";
+            var opponentId = "Player2";
+            var messageJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
+            _mockDispatcher.Setup(d => d.BroadcastAsync(It.IsAny<string>())).ReturnsAsync(true);
+            _mockDispatcher.Setup(d => d.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync(true);
+            _mockDispatcher.Setup(d => d.ConnectedPlayers).Returns(new ConcurrentDictionary<string, string>(
+                new System.Collections.Generic.Dictionary<string, string> { { userId, "" }, { opponentId, "" } }));
+
+            // Act
+            await _game.StartAsync();
+            await _game.ProcessPlayerEventAsync(userId, messageJson);
+
+            // Assert
+            _mockDispatcher.Verify(d => d.BroadcastAsync(It.Is<string>(s => 
+                s.Contains("CoinFlipResult") && (s.Contains(userId) || s.Contains(opponentId)))), Times.Once);
         }
     }
 }
