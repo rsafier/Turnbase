@@ -219,11 +219,39 @@ namespace Turnbase.Tests
                 if (message.Contains("CoinFlipResult"))
                     coinFlipResultTask.TrySetResult(message);
             });
+            _player1Connection.On<string>("GameEventBatch", (batchMessage) =>
+            {
+                Console.WriteLine($"Player1 Received (GameEventBatch): {batchMessage}");
+                var messages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(batchMessage);
+                if (messages != null)
+                {
+                    foreach (var message in messages)
+                    {
+                        debugMessages.Add(message);
+                        if (message.Contains("GameStarted"))
+                            gameStartedTask.TrySetResult(message);
+                        if (message.Contains("CoinFlipResult"))
+                            coinFlipResultTask.TrySetResult(message);
+                    }
+                }
+            });
             
             _player2Connection.On<string>("GameEvent", (message) =>
             {
                 Console.WriteLine($"Player2 Received (GameEvent): {message}");
                 debugMessages.Add(message);
+            });
+            _player2Connection.On<string>("GameEventBatch", (batchMessage) =>
+            {
+                Console.WriteLine($"Player2 Received (GameEventBatch): {batchMessage}");
+                var messages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(batchMessage);
+                if (messages != null)
+                {
+                    foreach (var message in messages)
+                    {
+                        debugMessages.Add(message);
+                    }
+                }
             });
 
             await _player1Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
@@ -274,11 +302,37 @@ namespace Turnbase.Tests
                 if (message.Contains("GameEnded"))
                     gameEndedTask.TrySetResult(message);
             });
+            _player1Connection.On<string>("GameEventBatch", (batchMessage) =>
+            {
+                Console.WriteLine($"Player1 Received (GameEventBatch): {batchMessage}");
+                var messages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(batchMessage);
+                if (messages != null)
+                {
+                    foreach (var message in messages)
+                    {
+                        debugMessages.Add(message);
+                        if (message.Contains("GameEnded"))
+                            gameEndedTask.TrySetResult(message);
+                    }
+                }
+            });
             
             _player2Connection.On<string>("GameEvent", (message) =>
             {
                 Console.WriteLine($"Player2 Received (GameEvent): {message}");
                 debugMessages.Add(message);
+            });
+            _player2Connection.On<string>("GameEventBatch", (batchMessage) =>
+            {
+                Console.WriteLine($"Player2 Received (GameEventBatch): {batchMessage}");
+                var messages = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>(batchMessage);
+                if (messages != null)
+                {
+                    foreach (var message in messages)
+                    {
+                        debugMessages.Add(message);
+                    }
+                }
             });
 
             await _player1Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
@@ -360,18 +414,18 @@ namespace Turnbase.Tests
             _hubContext = hubContext;
         }
 
-        public async Task<bool> BroadcastAsync(string eventJson)
+        public Task<bool> BroadcastAsync(string eventJson)
         {
-            await _hubContext.Clients.Group(RoomId).SendAsync("GameEvent", eventJson);
+            _hubContext.Clients.Group(RoomId).SendAsync("GameEvent", eventJson).GetAwaiter().GetResult();
             Console.WriteLine($"Broadcasting to room {RoomId}: {eventJson}");
-            return true;
+            return Task.FromResult(true);
         }
 
-        public async Task<bool> SendToUserAsync(string userId, string eventJson)
+        public Task<bool> SendToUserAsync(string userId, string eventJson)
         {
-            await _hubContext.Clients.User(userId).SendAsync("GameEvent", eventJson);
+            _hubContext.Clients.User(userId).SendAsync("GameEvent", eventJson).GetAwaiter().GetResult();
             Console.WriteLine($"Sending to user {userId}: {eventJson}");
-            return true;
+            return Task.FromResult(true);
         }
 
         public async Task<bool> SaveGameStateAsync(string stateJson)
