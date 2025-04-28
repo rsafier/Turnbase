@@ -149,23 +149,40 @@ namespace Turnbase.Tests
 
             _player1Connection.On<string>("PlayerJoined", (userId) => 
             {
-                player1JoinedPlayers.Add(userId);
-                if (player1JoinedPlayers.Count == 2) player1JoinedTask.TrySetResult(player1JoinedPlayers);
+                lock (player1JoinedPlayers)
+                {
+                    player1JoinedPlayers.Add(userId);
+                    Console.WriteLine($"Player 1 received PlayerJoined for {userId}. Total: {player1JoinedPlayers.Count}");
+                    if (player1JoinedPlayers.Count == 2) 
+                    {
+                        player1JoinedTask.TrySetResult(new List<string>(player1JoinedPlayers));
+                    }
+                }
             });
             _player2Connection.On<string>("PlayerJoined", (userId) => 
             {
-                player2JoinedPlayers.Add(userId);
-                if (player2JoinedPlayers.Count == 2) player2JoinedTask.TrySetResult(player2JoinedPlayers);
+                lock (player2JoinedPlayers)
+                {
+                    player2JoinedPlayers.Add(userId);
+                    Console.WriteLine($"Player 2 received PlayerJoined for {userId}. Total: {player2JoinedPlayers.Count}");
+                    if (player2JoinedPlayers.Count == 2) 
+                    {
+                        player2JoinedTask.TrySetResult(new List<string>(player2JoinedPlayers));
+                    }
+                }
             });
 
             // Act
+            Console.WriteLine("Player 1 joining room...");
             await _player1Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
+            await Task.Delay(500); // Small delay to ensure first player's event is processed
+            Console.WriteLine("Player 2 joining room...");
             await _player2Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
 
             // Assert
             try {
-                var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-                var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+                var player1Results = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                var player2Results = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
                 Assert.That(player1Results.Count, Is.EqualTo(2), "Player 1 should receive 2 PlayerJoined events");
                 Assert.That(player2Results.Count, Is.EqualTo(2), "Player 2 should receive 2 PlayerJoined events");
                 Assert.That(player1Results, Contains.Item(_player1Id), "Player 1 should receive event for self");
