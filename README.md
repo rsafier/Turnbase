@@ -169,8 +169,8 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
    - [X] Full implementation in `GameHub`.
 
 4. **Engine Features**  
-   - [ ] Authentication tests and implementation.  
-   - [ ] Room management tests and implementation.  
+   - [X] Authentication tests and implementation.  
+   - [X] Room management tests and implementation.  
    - [ ] Error handling and logging tests and implementation.
 
 5. **Final Steps**  
