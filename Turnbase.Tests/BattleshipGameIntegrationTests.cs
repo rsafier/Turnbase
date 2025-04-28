@@ -140,23 +140,29 @@ namespace Turnbase.Tests
             {
                 Console.WriteLine($"Player 1 received PlayerJoined for {userId}");
                 player1AllReceivedIds.Add(userId); // Log all received events
-                if (!player1JoinedIds.Contains(userId))
+                lock (player1JoinedIds)
                 {
-                    player1JoinedIds.Add(userId);
+                    if (!player1JoinedIds.Contains(userId))
+                    {
+                        player1JoinedIds.Add(userId);
+                    }
+                    if (player1JoinedIds.Count == 2)
+                        player1JoinedTask.TrySetResult(player1JoinedIds);
                 }
-                if (player1JoinedIds.Count == 2)
-                    player1JoinedTask.SetResult(player1JoinedIds);
             });
             _player2Connection.On<string>("PlayerJoined", (userId) => 
             {
                 Console.WriteLine($"Player 2 received PlayerJoined for {userId}");
                 player2AllReceivedIds.Add(userId); // Log all received events
-                if (!player2JoinedIds.Contains(userId))
+                lock (player2JoinedIds)
                 {
-                    player2JoinedIds.Add(userId);
+                    if (!player2JoinedIds.Contains(userId))
+                    {
+                        player2JoinedIds.Add(userId);
+                    }
+                    if (player2JoinedIds.Count == 2)
+                        player2JoinedTask.TrySetResult(player2JoinedIds);
                 }
-                if (player2JoinedIds.Count == 2)
-                    player2JoinedTask.SetResult(player2JoinedIds);
             });
 
             // Act

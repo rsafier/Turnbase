@@ -39,6 +39,7 @@ namespace Turnbase.Server.Hubs
             gameInstance.RoomId = roomId;
             gameInstance.EventDispatcher.RoomId = roomId;
 
+            // Send PlayerJoined event to all clients in the group, including the caller
             await Clients.Group(roomId).SendAsync("PlayerJoined", userId);
         }
 
