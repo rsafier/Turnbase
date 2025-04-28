@@ -265,6 +265,9 @@ namespace Turnbase.Tests
         private readonly IDbContextFactory<GameContext> _dbContextFactory;
         private string _lastSavedState = string.Empty;
 
+        public string RoomId { get; set; } = "TestRoom";
+        public List<string> ConnectedPlayers { get; set; } = new List<string>();
+
         public TestGameEventDispatcher(IDbContextFactory<GameContext> dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
