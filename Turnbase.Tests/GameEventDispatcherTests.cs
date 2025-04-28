@@ -97,6 +97,28 @@ namespace Turnbase.Tests
         }
 
         [Test]
+        public async Task SendToUserAsync_ExceptionThrown_ReturnsFalse()
+        {
+            // Arrange
+            string userId = "TestUser";
+            string connectionId = "Connection1";
+            string eventJson = "{\"EventType\": \"TestEvent\"}";
+            _connectedPlayers.TryAdd(userId, connectionId);
+
+            // Setup the mock to throw an exception when SendCoreAsync is called
+            _mockClientProxy.Setup(c => c.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Simulated send error"));
+
+            // Act
+            bool result = await _dispatcher.SendToUserAsync(userId, eventJson);
+
+            // Assert
+            Assert.IsFalse(result);
+            _mockClients.Verify(c => c.User(userId), Times.Once);
+            _mockClientProxy.Verify(c => c.SendCoreAsync("GameEvent", It.Is<object[]>(o => o.Length == 1 && o[0].ToString() == eventJson), It.IsAny<CancellationToken>()), Times.Once);
+        }
+
+        [Test]
         public async Task SaveGameStateAsync_ReturnsFalse()
         {
             // Arrange
