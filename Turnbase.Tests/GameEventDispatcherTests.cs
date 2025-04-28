@@ -123,5 +123,26 @@ namespace Turnbase.Tests
             Assert.IsFalse(result); // Current implementation returns false as it's not fully implemented
             // Note: In a real implementation, you would verify database operations or other retrieval mechanisms.
         }
+
+        [Test]
+        public async Task BroadcastAsync_ExceptionThrown_ReturnsFalse()
+        {
+            // Arrange
+            string roomId = "TestRoom";
+            string eventJson = "{\"EventType\": \"TestEvent\"}";
+            _dispatcher.RoomId = roomId;
+
+            // Setup the mock to throw an exception when SendAsync is called
+            _mockClientProxy.Setup(c => c.SendCoreAsync(It.IsAny<string>(), It.IsAny<object[]>(), It.IsAny<CancellationToken>()))
+                .ThrowsAsync(new Exception("Simulated broadcast error"));
+
+            // Act
+            bool result = await _dispatcher.BroadcastAsync(eventJson);
+
+            // Assert
+            Assert.IsFalse(result);
+            _mockClients.Verify(c => c.Group(roomId), Times.Once);
+            _mockClientProxy.Verify(c => c.SendCoreAsync("GameEvent", It.Is<object[]>(o => o.Length == 1 && o[0].ToString() == eventJson), It.IsAny<CancellationToken>()), Times.Once);
+        }
     }
 }
