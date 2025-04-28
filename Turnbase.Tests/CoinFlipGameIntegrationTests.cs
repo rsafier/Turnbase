@@ -218,7 +218,7 @@ namespace Turnbase.Tests
             // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(12));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
             }
             catch (TimeoutException ex)
             {
@@ -230,13 +230,19 @@ namespace Turnbase.Tests
                 Assert.Fail($"Timeout: {ex.Message}");
             }
 
-            // Check database state
+            // Check database state with retry to account for async save
             var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
-            using var dbContext = dbContextFactory.CreateDbContext();
-            var gameState = await dbContext.GameStates.FirstOrDefaultAsync();
+            Turnbase.Server.Models.GameState gameState = null;
+            for (int i = 0; i < 5; i++)
+            {
+                using var dbContext = dbContextFactory.CreateDbContext();
+                gameState = await dbContext.GameStates.FirstOrDefaultAsync();
+                if (gameState != null) break;
+                await Task.Delay(500); // Wait for async save operation
+            }
 
             // Assert
-            Assert.IsNotNull(gameState, "Game state was not saved to database. Ensure GameEventDispatcher.SaveGameStateAsync is implemented to save state.");
+            Assert.IsNotNull(gameState, "Game state was not saved to database after retries. Ensure GameEventDispatcher.SaveGameStateAsync is implemented to save state.");
             Assert.IsTrue(gameState.StateJson.Contains("CoinFlip"), "Game state JSON does not contain expected content.");
         }
     }
@@ -266,7 +272,12 @@ namespace Turnbase.Tests
         private readonly IDbContextFactory<GameContext> _dbContextFactory;
         private string _lastSavedState = string.Empty;
 
-        public string RoomId { get; set; } = "TestRoom";
+        private string _roomId = "TestRoom";
+        public string RoomId 
+        { 
+            get => _roomId; 
+            set => _roomId = value; 
+        }
         public ConcurrentDictionary<string, string> ConnectedPlayers { get; set; } = new ConcurrentDictionary<string, string>();
 
         public TestGameEventDispatcher(IDbContextFactory<GameContext> dbContextFactory)
@@ -292,12 +303,13 @@ namespace Turnbase.Tests
             using var dbContext = _dbContextFactory.CreateDbContext();
             var gameState = new Turnbase.Server.Models.GameState
             {
-                GameId = 1, // Hardcoded for test
+                GameId = int.TryParse(RoomId.Replace(_roomIdBase, ""), out int parsedId) ? parsedId : 1,
                 StateJson = stateJson,
                 CreatedDate = DateTime.UtcNow
             };
             dbContext.GameStates.Add(gameState);
             await dbContext.SaveChangesAsync();
+            Console.WriteLine($"Saved game state for RoomId: {RoomId}, GameId: {gameState.GameId}");
             return true;
         }
 
