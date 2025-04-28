@@ -127,10 +127,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Added logic in `GameHub` to create/manage game rooms dynamically.  
   - Implemented room creation and listing functionality.
 
-- [ ] **Error Handling and Logging**  
-  **Status**: Not Started  
+- [X] **Error Handling and Logging**  
+  **Status**: Completed  
   - Implement try-catch blocks in game logic and hub methods.  
-  - Use `ILogger` for logging events and errors.
+  - Use `ILogger` for logging events and errors.  
+  **Note**: Comprehensive logging has been added to `GameHub`, `BaseGameInstance`, `BattleshipGame`, and `CoinFlipGame`. Error handling with try-catch blocks is in place across all major components.
 
 - [ ] **Performance Optimization**  
   **Status**: Not Started  
@@ -173,7 +174,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 4. **Engine Features**  
    - [X] Authentication tests and implementation.  
    - [X] Room management tests and implementation.  
-   - [ ] Error handling and logging tests and implementation.
+   - [X] Error handling and logging tests and implementation.
 
 5. **Final Steps**  
    - [ ] Documentation for code and games.  
@@ -183,9 +184,9 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 - **Current Phase**: Phase 4 - Engine Enhancements and Polish  
 - **Next Steps**:  
-  1. Implement error handling and logging in game logic and hub methods using try-catch blocks and `ILogger`.  
-  2. Optimize performance by batching SignalR message updates and ensuring asynchronous operations for I/O tasks.  
-- **Updates**: Integration tests for Battleship are now complete with all tests passing. The project has moved to Phase 4, focusing on engine enhancements like error handling, logging, and performance optimization. Authentication and room management features are implemented in `GameHub`.
+  1. Optimize performance by batching SignalR message updates and ensuring asynchronous operations for I/O tasks.  
+  2. Begin Phase 5 by documenting public interfaces, hub methods, and providing game rules and setup instructions.  
+- **Updates**: Error handling and logging have been fully implemented across game logic and hub components using try-catch blocks and `ILogger`. All tests are passing with warnings related to test output verbosity. The project continues in Phase 4, focusing on performance optimization before moving to documentation and deployment in Phase 5.
 
 ## Conclusion
 
