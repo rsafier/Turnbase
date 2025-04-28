@@ -32,7 +32,9 @@ namespace Turnbase.Tests
             // Setup mock for ConnectedPlayers
             var connectedPlayers = new ConcurrentDictionary<string, string>();
             _mockEventDispatcher.Setup(d => d.ConnectedPlayers).Returns(connectedPlayers);
-            _mockEventDispatcher.Setup(d => d.RoomId = It.IsAny<string>()).Callback<string>(r => { });
+            // Use a local variable to store RoomId for testing purposes
+            string currentRoomId = string.Empty;
+            _mockEventDispatcher.SetupSet(d => d.RoomId = It.IsAny<string>()).Callback<string>(r => currentRoomId = r);
 
             // Setup mock context with a user identity
             var claims = new[] { new Claim(ClaimTypes.Name, "TestUser1") };
@@ -67,7 +69,7 @@ namespace Turnbase.Tests
 
             // Assert
             _mockGroups.Verify(g => g.AddToGroupAsync("Connection1", roomId, CancellationToken.None), Times.Once);
-            _mockEventDispatcher.Verify(d => d.RoomId = roomId, Times.Once);
+            _mockEventDispatcher.VerifySet(d => d.RoomId = roomId, Times.Once);
             _mockEventDispatcher.Verify(d => d.ConnectedPlayers.TryAdd("TestUser1", "Connection1"), Times.Once);
             mockGroupClients.Verify(c => c.SendCoreAsync("PlayerJoined", new object[] { "TestUser1" }, CancellationToken.None), Times.Once);
         }
