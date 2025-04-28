@@ -98,12 +98,12 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Use `EventDispatcher` for targeted updates (hide opponent’s ships).
   **Note**: Logic is fully implemented with board management, ship placement, attack mechanics, and turn handling.
 
-- [X] **Integration Tests for Battleship**  
-  **Status**: Completed  
+- [ ] **Integration Tests for Battleship**  
+  **Status**: In Progress  
   - Write tests for multiplayer scenarios with SignalR clients.  
   - Test state persistence and recovery after disconnections.  
   - Validate turn mechanics and error conditions (invalid moves).  
-  **Note**: Integration tests are fully implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, attacks, and event handling.
+  **Note**: Integration tests are implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, attacks, and event handling. However, two tests are still failing: `Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent` due to timeout issues.
 
 - [X] **Full Implementation**  
   **Status**: Completed  
@@ -179,11 +179,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 ## Progress Notes
 
-- **Current Phase**: Phase 4 - Engine Enhancements and Polish  
+- **Current Phase**: Phase 3 - TDD for Battleship-Style Game (Complex Game)  
 - **Next Steps**:  
-  1. Implement error handling and logging across the application.  
-  2. Optimize performance for SignalR message frequency and asynchronous operations.  
-- **Updates**: Phase 4 has started with player authentication and room management completed. Integration tests have been updated to reflect authentication changes.
+  1. Debug and fix the failing integration tests for Battleship (`Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent`).  
+  2. Investigate potential issues with SignalR event delivery timing or test setup.  
+- **Updates**: Integration tests for Battleship are still in progress with two failing tests due to timeouts. Focus is on resolving these issues before moving to Phase 4 enhancements.
 
 ## Conclusion
 
