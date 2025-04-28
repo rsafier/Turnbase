@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using System;
 
 namespace Turnbase.Tests
 {
@@ -13,8 +14,8 @@ namespace Turnbase.Tests
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock)
-            : base(options, logger, encoder, clock)
+            TimeProvider timeProvider)
+            : base(options, logger, encoder, timeProvider)
         {
         }
 
@@ -22,9 +23,9 @@ namespace Turnbase.Tests
         {
             // Allow anonymous access for testing purposes
             // Use a deterministic identifier for the connection
-            var connectionId = Context.Items.ContainsKey("ConnectionId") ? Context.Items["ConnectionId"].ToString() : "TestConnection_Player" + (Context.Items.Count + 1);
+            var connectionId = Context.Items.TryGetValue("ConnectionId", out var id) ? id?.ToString() : $"TestConnection_Player{Context.Items.Count + 1}";
             Console.WriteLine($"Assigning user ID: {connectionId} for authentication");
-            var claims = new[] { new Claim(ClaimTypes.Name, connectionId) };
+            var claims = new[] { new Claim(ClaimTypes.Name, connectionId ?? "Unknown") };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
