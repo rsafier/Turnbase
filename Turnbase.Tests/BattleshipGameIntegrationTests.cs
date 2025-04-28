@@ -264,7 +264,8 @@ namespace Turnbase.Tests
             var gameStartedTask = new TaskCompletionSource<string>();
             var shipPlacedTaskP1 = new TaskCompletionSource<string>();
             var shipPlacedTaskP2 = new TaskCompletionSource<string>();
-            var attackResultTask = new TaskCompletionSource<string>();
+            var attackResultTaskP1 = new TaskCompletionSource<string>();
+            var attackResultTaskP2 = new TaskCompletionSource<string>();
             var debugMessages = new List<string>();
 
             _player1Connection.On<string>("GameEvent", (message) =>
@@ -276,15 +277,17 @@ namespace Turnbase.Tests
                 if (message.Contains("ShipPlaced") && message.Contains(_player1Id))
                     shipPlacedTaskP1.TrySetResult(message);
                 if (message.Contains("AttackResult"))
-                    attackResultTask.TrySetResult(message);
+                    attackResultTaskP1.TrySetResult(message);
             });
             
             _player2Connection.On<string>("GameEvent", (message) =>
             {
                 Console.WriteLine($"Player2 Received (GameEvent): {message}");
                 debugMessages.Add(message);
-                if (message.Contains("ShipPlaced") && message.Contains(_player2Id))
+                if (message.Contains("ShipPlaced") && message.Contains(_player1Id))
                     shipPlacedTaskP2.TrySetResult(message);
+                if (message.Contains("AttackResult"))
+                    attackResultTaskP2.TrySetResult(message);
             });
 
             await _player1Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
@@ -331,9 +334,12 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var attackResult = await attackResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-                Assert.IsTrue(attackResult.Contains("AttackResult"), "AttackResult event not received.");
-                Assert.IsTrue(attackResult.Contains("Hit") || attackResult.Contains("Miss"), "Attack result does not contain Hit or Miss status.");
+                var attackResultP1 = await attackResultTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                var attackResultP2 = await attackResultTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                Assert.IsTrue(attackResultP1.Contains("AttackResult"), "AttackResult event not received by Player 1.");
+                Assert.IsTrue(attackResultP2.Contains("AttackResult"), "AttackResult event not received by Player 2.");
+                Assert.IsTrue(attackResultP1.Contains("Hit") || attackResultP1.Contains("Miss"), "Attack result for Player 1 does not contain Hit or Miss status.");
+                Assert.IsTrue(attackResultP2.Contains("Hit") || attackResultP2.Contains("Miss"), "Attack result for Player 2 does not contain Hit or Miss status.");
             }
             catch (TimeoutException ex)
             {
