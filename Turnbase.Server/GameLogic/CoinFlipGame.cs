@@ -40,8 +40,8 @@ namespace Turnbase.Server.GameLogic
 
             try
             {
-                dynamic move = JsonConvert.DeserializeObject(messageJson);
-                string action = move?.Action;
+                dynamic? move = JsonConvert.DeserializeObject(messageJson);
+                string? action = move?.Action?.ToString();
 
                 if (action == "FlipCoin")
                 {
