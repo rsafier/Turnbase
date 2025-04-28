@@ -22,7 +22,7 @@ namespace Turnbase.Tests
         private IHost _host;
         private HubConnection _player1Connection;
         private HubConnection _player2Connection;
-        private string _roomId = "TestRoom";
+        private string _roomId = "1"; // Use a numeric string that can be parsed as an integer
         private string _player1Id = "Player1";
         private string _player2Id = "Player2";
 
