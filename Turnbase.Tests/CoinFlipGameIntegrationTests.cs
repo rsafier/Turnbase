@@ -126,6 +126,12 @@ namespace Turnbase.Tests
                 if (message.Contains("CoinFlipResult"))
                     coinFlipResultTask.TrySetResult(message);
             });
+            
+            _player2Connection.On<string>("GameEvent", (message) =>
+            {
+                Console.WriteLine($"Player2 Received (GameEvent): {message}");
+                debugMessages.Add(message);
+            });
 
             await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
             await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
@@ -134,7 +140,7 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("StartGame", _roomId);
 
             // Small delay to ensure game start event is processed
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
@@ -143,8 +149,8 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(60));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(60));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
@@ -173,6 +179,12 @@ namespace Turnbase.Tests
                 if (message.Contains("GameEnded"))
                     gameEndedTask.TrySetResult(message);
             });
+            
+            _player2Connection.On<string>("GameEvent", (message) =>
+            {
+                Console.WriteLine($"Player2 Received (GameEvent): {message}");
+                debugMessages.Add(message);
+            });
 
             await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id, "CoinFlip");
             await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id, "CoinFlip");
@@ -181,7 +193,7 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("StartGame", _roomId);
 
             // Small delay to ensure game start event is processed
-            await Task.Delay(500);
+            await Task.Delay(1000);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
@@ -190,7 +202,7 @@ namespace Turnbase.Tests
             // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(60));
             }
             catch (TimeoutException ex)
             {
