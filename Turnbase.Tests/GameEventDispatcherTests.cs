@@ -11,6 +11,7 @@ using System.Threading;
 namespace Turnbase.Tests
 {
     [TestFixture]
+    [Category("GameEventDispatcher")]
     public class GameEventDispatcherTests
     {
         private GameEventDispatcher _dispatcher;
