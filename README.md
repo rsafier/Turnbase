@@ -1,6 +1,6 @@
 # Turn-Based Multiplayer Game Engine - Design and Implementation Plan
 
-[![CI/CD Unit Tests](https://github.com/yourusername/yourrepository/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/yourrepository/actions/workflows/ci.yml)
+[![CI/CD Unit Tests](https://github.com/rsafier/Turnbase/actions/workflows/ci.yml/badge.svg)](https://github.com/rsafier/Turnbase/actions/workflows/ci.yml)
 
 ## Design Overview
 
