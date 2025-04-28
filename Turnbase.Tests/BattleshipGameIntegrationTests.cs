@@ -103,7 +103,7 @@ namespace Turnbase.Tests
             Console.WriteLine($"Player 1 Connection ID: {_player1Connection.ConnectionId}");
             Console.WriteLine($"Player 2 Connection ID: {_player2Connection.ConnectionId}");
             
-            // Set player IDs based on how TestAuthenticationHandler assigns them
+            // Set player IDs based on the counter in TestAuthenticationHandler
             _player1Id = "TestConnection_Player1";
             _player2Id = "TestConnection_Player2";
             Console.WriteLine($"Expected Player 1 ID: {_player1Id}");

@@ -20,15 +20,15 @@ namespace Turnbase.Tests
         {
         }
 
+        private static int _connectionCounter = 0;
+
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Allow anonymous access for testing purposes
-            // Use a deterministic identifier based on the connection ID
-            var connectionId = Context.Connection.Id;
-            // Map connection ID to a player number deterministically for testing
-            var playerNumber = Math.Abs(connectionId.GetHashCode() % 2) + 1;
+            // Use a static counter to assign unique player IDs for testing
+            var playerNumber = Interlocked.Increment(ref _connectionCounter);
             var userId = $"TestConnection_Player{playerNumber}";
-            Console.WriteLine($"Assigning user ID: {userId} for connection {connectionId}");
+            Console.WriteLine($"Assigning user ID: {userId} for connection attempt {playerNumber}");
             var claims = new[] { new Claim(ClaimTypes.Name, userId) };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);

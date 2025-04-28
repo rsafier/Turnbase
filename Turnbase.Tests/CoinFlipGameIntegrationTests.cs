@@ -99,7 +99,7 @@ namespace Turnbase.Tests
             await _player1Connection.StartAsync();
             await _player2Connection.StartAsync();
             
-            // Set player IDs - use deterministic IDs for testing
+            // Set player IDs - use deterministic IDs for testing based on counter
             _player1Id = "TestConnection_Player1";
             _player2Id = "TestConnection_Player2";
         }
