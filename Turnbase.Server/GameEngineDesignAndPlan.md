@@ -99,10 +99,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   **Note**: Logic is fully implemented with board management, ship placement, attack mechanics, and turn handling.
 
 - [ ] **Integration Tests for Battleship**  
-  **Status**: Not Started  
+  **Status**: In Progress  
   - Write tests for multiplayer scenarios with SignalR clients.  
   - Test state persistence and recovery after disconnections.  
-  - Validate turn mechanics and error conditions (invalid moves).
+  - Validate turn mechanics and error conditions (invalid moves).  
+  **Note**: Initial integration tests are implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, and basic attacks.
 
 - [X] **Full Implementation**  
   **Status**: Completed  
