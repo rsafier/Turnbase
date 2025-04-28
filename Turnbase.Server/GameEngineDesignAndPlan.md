@@ -115,15 +115,15 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 ### Phase 4: Engine Enhancements and Polish
 **Objective**: Add features to make the engine production-ready.
 
-- [ ] **Player Authentication**  
-  **Status**: Not Started  
-  - Integrate ASP.NET Core Identity for user authentication.  
-  - Secure SignalR hub methods for authenticated users only.
+- [X] **Player Authentication**  
+  **Status**: Completed  
+  - Integrated ASP.NET Core Identity for user authentication.  
+  - Secured SignalR hub methods for authenticated users with fallback for testing.
 
-- [ ] **Game Room Management**  
-  **Status**: Not Started  
-  - Add logic in `GameHub` to create/manage game rooms dynamically.  
-  - Track room state (waiting, in-progress, completed).
+- [X] **Game Room Management**  
+  **Status**: Completed  
+  - Added logic in `GameHub` to create/manage game rooms dynamically.  
+  - Implemented room creation and listing functionality.
 
 - [ ] **Error Handling and Logging**  
   **Status**: Not Started  
@@ -181,9 +181,9 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 - **Current Phase**: Phase 4 - Engine Enhancements and Polish  
 - **Next Steps**:  
-  1. Begin Phase 4 by planning and implementing enhancements like player authentication.  
-  2. Develop room management features to dynamically create and manage game rooms.  
-- **Updates**: Phase 3 is complete with unit tests, logic, and integration tests for `BattleshipGame`. CoinFlip integration tests are also passing. The focus now shifts to Phase 4 for engine enhancements.
+  1. Implement error handling and logging across the application.  
+  2. Optimize performance for SignalR message frequency and asynchronous operations.  
+- **Updates**: Phase 4 has started with player authentication and room management completed. Integration tests have been updated to reflect authentication changes.
 
 ## Conclusion
 

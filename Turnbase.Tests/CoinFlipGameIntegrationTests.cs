@@ -25,8 +25,8 @@ namespace Turnbase.Tests
         private HubConnection _player1Connection;
         private HubConnection _player2Connection;
         private string _roomIdBase = "Room_"; // Base for generating unique room IDs
-        private string _player1Id = "Player1";
-        private string _player2Id = "Player2";
+        private string _player1Id;
+        private string _player2Id;
 
         [SetUp]
         public async Task Setup()
@@ -85,6 +85,10 @@ namespace Turnbase.Tests
 
             await _player1Connection.StartAsync();
             await _player2Connection.StartAsync();
+            
+            // Set player IDs based on connection IDs since authentication is not used in tests
+            _player1Id = _player1Connection.ConnectionId;
+            _player2Id = _player2Connection.ConnectionId;
         }
 
         [TearDown]

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading.Tasks;
 using Turnbase.Server.GameLogic;
@@ -6,6 +7,7 @@ using Newtonsoft.Json;
 
 namespace Turnbase.Server.Hubs
 {
+    [Authorize]
     public class GameHub : Hub
     {
         private readonly IGameEventDispatcher _eventDispatcher;
