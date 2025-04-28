@@ -59,7 +59,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - In `Turnbase.Tests`, created `CoinFlipGameTests.cs`.  
   - Wrote tests for game initialization, player turns, winner determination, and game end.  
   - Mocked `IGameEventDispatcher` to isolate logic from SignalR/database.
-  **Note**: Basic unit tests are in place covering game start, stop, turn management, and error handling.
+  **Note**: Comprehensive unit tests are in place covering game start, stop, turn management, error handling, and game inactivity behavior. All tests are passing.
 
 - [X] **Implement Coin Flip Logic**  
   **Status**: Completed  
@@ -179,7 +179,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 - **Next Steps**:  
   1. Develop integration tests for Coin Flip game to validate SignalR and database interactions.  
   2. Begin Phase 3 by planning and writing unit tests for the Battleship-style game.  
-- **Updates**: Phase 2 unit tests for `CoinFlipGame` are complete. Full implementation appears to be in place with a successful build. The next focus is on integration tests to confirm end-to-end functionality.
+- **Updates**: Phase 2 unit tests for `CoinFlipGame` are complete with all tests passing successfully. Full implementation is in place with a successful build. The next focus is on integration tests to confirm end-to-end functionality.
 
 ## Conclusion
 
