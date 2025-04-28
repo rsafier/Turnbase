@@ -68,12 +68,12 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Use `EventDispatcher` to notify players of state changes.  
   **Note**: Implementation exists as per provided `CoinFlipGame.cs`. Logic includes game start/stop, turn management, coin flip simulation, and event broadcasting.
 
-- [ ] **Integration Tests for Coin Flip**  
-  **Status**: Not Started  
+- [X] **Integration Tests for Coin Flip**  
+  **Status**: Completed  
   - Write tests in `Turnbase.Tests` to simulate SignalR client connections.  
   - Use in-memory SQLite database for state persistence testing.  
-  - Validate end-to-end flow: joining room, making moves, receiving events, state saving/loading.
-  **Note**: This is the next step to ensure full end-to-end functionality.
+  - Validate end-to-end flow: joining room, making moves, receiving events, state saving/loading.  
+  **Note**: Integration tests are implemented in `CoinFlipGameIntegrationTests.cs` covering room joining, game events, and state persistence.
 
 - [X] **Full Implementation**  
   **Status**: Completed  
@@ -155,7 +155,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 2. **Coin Flip Game**  
    - [X] Unit tests for logic.  
    - [X] Logic implementation.  
-   - [ ] Integration tests with SignalR/database.  
+   - [X] Integration tests with SignalR/database.  
    - [X] Full implementation in `GameHub`.
 
 3. **Battleship Game**  
@@ -175,11 +175,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 ## Progress Notes
 
-- **Current Phase**: Phase 2 - TDD for Coin Flip Game  
+- **Current Phase**: Phase 3 - TDD for Battleship-Style Game  
 - **Next Steps**:  
-  1. Develop integration tests for Coin Flip game to validate SignalR and database interactions.  
-  2. Begin Phase 3 by planning and writing unit tests for the Battleship-style game.  
-- **Updates**: Phase 2 unit tests for `CoinFlipGame` are complete with all tests passing successfully. Full implementation is in place with a successful build. The next focus is on integration tests to confirm end-to-end functionality.
+  1. Begin Phase 3 by planning and writing unit tests for the Battleship-style game.  
+  2. Implement the Battleship game logic based on the test specifications.  
+- **Updates**: Phase 2 is complete with integration tests for `CoinFlipGame` implemented and passing. The focus now shifts to Phase 3, starting with unit tests for the more complex Battleship-style game to test advanced engine features.
 
 ## Conclusion
 
