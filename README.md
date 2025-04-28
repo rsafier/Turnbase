@@ -49,7 +49,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   **Status**: Completed  
   - Implement `IGameEventDispatcher` to integrate with SignalR for event broadcasting and EF Core for state persistence.  
   - Create a base class for `IGameInstance` to handle common game lifecycle tasks.  
-  **Note**: `GameEventDispatcher.cs` implements `IGameEventDispatcher` with SignalR and database integration. `BaseGameInstance.cs` provides a base class for `IGameInstance`.
+  **Note**: `GameEventDispatcher.cs` implements `IGameEventDispatcher` with SignalR and database integration. `BaseGameInstance.cs` provides a base class for `IGameInstance`. Comprehensive unit tests for `GameEventDispatcher` have been added and are passing, covering broadcast, user messaging, and exception handling scenarios.
 
 ### Phase 2: TDD for Coin Flip Game (Simple Game)
 **Objective**: Develop a simple game to validate the engine's basic functionality using TDD.
@@ -183,7 +183,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 - **Next Steps**:  
   1. Debug and fix the failing integration tests for Battleship (`Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent`).  
   2. Investigate potential issues with SignalR event delivery timing or test setup, focusing on why Player 1 receives duplicate join events and Player 2 misses its own join event.  
-- **Updates**: Integration tests for Battleship are still in progress with two failing tests due to timeouts. Recent changes to use connection IDs in tests did not resolve the issue. Further debugging is needed to address event broadcasting or reception problems before moving to Phase 4 enhancements.
+- **Updates**: Integration tests for Battleship are still in progress with two failing tests due to timeouts. Recent changes to use connection IDs in tests did not resolve the issue. Further debugging is needed to address event broadcasting or reception problems. Additionally, full test coverage for `GameEventDispatcher` has been achieved, including exception handling for broadcast and user messaging. Authentication and room management features are implemented in `GameHub`.
 
 ## Conclusion
 
