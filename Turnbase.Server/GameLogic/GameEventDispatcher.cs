@@ -29,7 +29,7 @@ namespace Turnbase.Server.GameLogic
             _batchTimer = new Timer(ProcessMessageBatches, null, BatchIntervalMs, BatchIntervalMs);
         }
 
-        private void ProcessMessageBatches(object state)
+        private void ProcessMessageBatches(object? state)
         {
             // Process broadcast messages
             if (_broadcastMessageQueue.Count > 0)
@@ -87,32 +87,32 @@ namespace Turnbase.Server.GameLogic
             }
         }
 
-        public async Task<bool> BroadcastAsync(string eventJson)
+        public Task<bool> BroadcastAsync(string eventJson)
         {
             try
             {
                 _broadcastMessageQueue.Enqueue(eventJson);
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error queuing broadcast event to group {RoomId}: {ex.Message}");
-                return false;
+                return Task.FromResult(false);
             }
         }
 
-        public async Task<bool> SendToUserAsync(string userId, string eventJson)
+        public Task<bool> SendToUserAsync(string userId, string eventJson)
         {
             try
             {
                 var userQueue = _userMessageQueues.GetOrAdd(userId, _ => new ConcurrentQueue<string>());
                 userQueue.Enqueue(eventJson);
-                return true;
+                return Task.FromResult(true);
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error queuing event to user {userId}: {ex.Message}");
-                return false;
+                return Task.FromResult(false);
             }
         }
 
