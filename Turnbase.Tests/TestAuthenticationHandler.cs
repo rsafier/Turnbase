@@ -18,6 +18,7 @@ namespace Turnbase.Tests
             : base(options, logger, encoder, clock)
         {
         }
+#pragma warning disable CS0618 // Suppress obsolete warning for ISystemClock
 
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -33,6 +34,7 @@ namespace Turnbase.Tests
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
     }
+#pragma warning restore CS0618 // Restore warning after class definition
 
     public static class TestAuthenticationExtensions
     {
