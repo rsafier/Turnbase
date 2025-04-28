@@ -154,7 +154,7 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("StartGame", roomId);
 
             // Small delay to ensure game start event is processed
-            await Task.Delay(1000);
+            await Task.Delay(500);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
@@ -163,8 +163,8 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(12));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(12));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
@@ -209,16 +209,16 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("StartGame", roomId);
 
             // Small delay to ensure game start event is processed
-            await Task.Delay(1000);
+            await Task.Delay(500);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, moveJson);
 
-            // Wait for game to end with a longer timeout
+            // Wait for game to end with a reasonable timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
             }
             catch (TimeoutException ex)
             {
@@ -230,15 +230,15 @@ namespace Turnbase.Tests
                 Assert.Fail($"Timeout: {ex.Message}");
             }
 
-            // Check database state with retry to account for async save
+            // Check database state with minimal retry to account for async save
             var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
             Turnbase.Server.Models.GameState gameState = null;
-            for (int i = 0; i < 5; i++)
+            for (int i = 0; i < 3; i++)
             {
                 using var dbContext = dbContextFactory.CreateDbContext();
                 gameState = await dbContext.GameStates.FirstOrDefaultAsync();
                 if (gameState != null) break;
-                await Task.Delay(500); // Wait for async save operation
+                await Task.Delay(200); // Short wait for async save operation
             }
 
             // Assert
@@ -303,13 +303,13 @@ namespace Turnbase.Tests
             using var dbContext = _dbContextFactory.CreateDbContext();
             var gameState = new Turnbase.Server.Models.GameState
             {
-                GameId = int.TryParse(RoomId.Replace(_roomIdBase, ""), out int parsedId) ? parsedId : 1,
+                GameId = 1, // Hardcoded for simplicity in tests
                 StateJson = stateJson,
                 CreatedDate = DateTime.UtcNow
             };
             dbContext.GameStates.Add(gameState);
             await dbContext.SaveChangesAsync();
-            Console.WriteLine($"Saved game state for RoomId: {RoomId}, GameId: {gameState.GameId}");
+            Console.WriteLine($"Saved game state: {stateJson.Substring(0, Math.Min(stateJson.Length, 50))}...");
             return true;
         }
 
