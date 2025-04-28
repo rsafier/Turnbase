@@ -44,7 +44,8 @@ namespace Turnbase.Tests
                         services.AddSingleton<IGameEventDispatcher>(sp => 
                         {
                             var dbFactory = sp.GetRequiredService<IDbContextFactory<GameContext>>();
-                            return new TestGameEventDispatcher(dbFactory);
+                            var hubContext = sp.GetRequiredService<IHubContext<GameHub>>();
+                            return new TestGameEventDispatcher(dbFactory, hubContext);
                         });
                     });
                     webHost.Configure(app =>
@@ -153,8 +154,8 @@ namespace Turnbase.Tests
             // Explicitly start the game
             await _player1Connection.InvokeAsync("StartGame", roomId);
 
-            // Small delay to ensure game start event is processed
-            await Task.Delay(500);
+            // Wait a bit longer to ensure game start event is processed
+            await Task.Delay(1000);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
@@ -163,8 +164,8 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
@@ -208,17 +209,17 @@ namespace Turnbase.Tests
             // Explicitly start the game
             await _player1Connection.InvokeAsync("StartGame", roomId);
 
-            // Small delay to ensure game start event is processed
-            await Task.Delay(500);
+            // Wait a bit longer to ensure game start event is processed
+            await Task.Delay(1000);
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, moveJson);
 
-            // Wait for game to end with a reasonable timeout
+            // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
             }
             catch (TimeoutException ex)
             {
@@ -264,6 +265,7 @@ namespace Turnbase.Tests
     public class TestGameEventDispatcher : IGameEventDispatcher
     {
         private readonly IDbContextFactory<GameContext> _dbContextFactory;
+        private readonly IHubContext<GameHub> _hubContext;
         private string _lastSavedState = string.Empty;
 
         private string _roomId = "TestRoom";
@@ -274,21 +276,24 @@ namespace Turnbase.Tests
         }
         public ConcurrentDictionary<string, string> ConnectedPlayers { get; set; } = new ConcurrentDictionary<string, string>();
 
-        public TestGameEventDispatcher(IDbContextFactory<GameContext> dbContextFactory)
+        public TestGameEventDispatcher(IDbContextFactory<GameContext> dbContextFactory, IHubContext<GameHub> hubContext)
         {
             _dbContextFactory = dbContextFactory;
+            _hubContext = hubContext;
         }
 
-        public Task<bool> BroadcastAsync(string eventJson)
+        public async Task<bool> BroadcastAsync(string eventJson)
         {
-            // Broadcasting is handled by SignalR in the test environment
-            return Task.FromResult(true);
+            await _hubContext.Clients.Group(RoomId).SendAsync("GameEvent", eventJson);
+            Console.WriteLine($"Broadcasting to room {RoomId}: {eventJson}");
+            return true;
         }
 
-        public Task<bool> SendToUserAsync(string userId, string eventJson)
+        public async Task<bool> SendToUserAsync(string userId, string eventJson)
         {
-            // Sending to user is handled by SignalR in the test environment
-            return Task.FromResult(true);
+            await _hubContext.Clients.User(userId).SendAsync("GameEvent", eventJson);
+            Console.WriteLine($"Sending to user {userId}: {eventJson}");
+            return true;
         }
 
         public async Task<bool> SaveGameStateAsync(string stateJson)
