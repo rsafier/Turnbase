@@ -43,7 +43,7 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration.GetValue<string>("Jwt:Issuer", "DefaultIssuer"),
         ValidAudience = builder.Configuration.GetValue<string>("Jwt:Audience", "DefaultAudience"),
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Jwt:Key", "DefaultKeyForTestingPurposesOnly1234567890")))
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Jwt:Key", "DefaultKeyForTestingPurposesOnly1234567890") ?? throw new InvalidOperationException("JWT Key is not configured.")))
     };
     options.Events = new JwtBearerEvents
     {
