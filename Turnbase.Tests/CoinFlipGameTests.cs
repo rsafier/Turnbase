@@ -66,7 +66,7 @@ namespace Turnbase.Tests
         }
 
         [Test]
-        public async Task ProcessPlayerEventAsync_NotPlayersTurn_SendsErrorMessage()
+        public async Task ProcessPlayerEventAsync_GameInactiveAfterFirstMove_DoesNotProcessSecondMove()
         {
             // Arrange
             var userId = "Player1";
@@ -79,11 +79,14 @@ namespace Turnbase.Tests
 
             // Act
             await _game.StartAsync(); // Start the game to set it as active
-            await _game.ProcessPlayerEventAsync(otherUserId, messageJson); // First player sets turn
-            await _game.ProcessPlayerEventAsync(userId, messageJson); // Second player tries to play out of turn
+            await _game.ProcessPlayerEventAsync(otherUserId, messageJson); // First player makes move and game ends
+            await _game.ProcessPlayerEventAsync(userId, messageJson); // Second player tries to play but game is inactive
 
             // Assert
-            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Not your turn"))), Times.Once);
+            // Since the game ends after the first flip, the second move is ignored due to game inactivity
+            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.IsAny<string>()), Times.Never);
+            _mockDispatcher.Verify(d => d.BroadcastAsync(It.Is<string>(s => s.Contains("CoinFlipResult"))), Times.Once);
+            _mockDispatcher.Verify(d => d.BroadcastAsync(It.Is<string>(s => s.Contains("GameEnded"))), Times.Once);
         }
 
         [Test]
