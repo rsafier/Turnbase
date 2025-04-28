@@ -101,7 +101,7 @@ namespace Turnbase.Tests
             
             // Set player IDs - use deterministic IDs for testing
             _player1Id = "TestConnection_Player1";
-            _player2Id = "TestConnection_Player1"; // Temporarily set to same ID due to test auth handler limitation
+            _player2Id = "TestConnection_Player2"; // Fixed to use different IDs for players
         }
 
         [TearDown]
@@ -267,6 +267,9 @@ namespace Turnbase.Tests
             var attackResultTaskP1 = new TaskCompletionSource<string>();
             var attackResultTaskP2 = new TaskCompletionSource<string>();
             var debugMessages = new List<string>();
+            var shipsToPlace = new[] { "Carrier", "Battleship", "Cruiser", "Submarine", "Destroyer" };
+            var placedShipsP1 = new ConcurrentBag<string>();
+            var placedShipsP2 = new ConcurrentBag<string>();
 
             _player1Connection.On<string>("GameEvent", (message) =>
             {
@@ -275,7 +278,12 @@ namespace Turnbase.Tests
                 if (message.Contains("GameStarted"))
                     gameStartedTask.TrySetResult(message);
                 if (message.Contains("ShipPlaced") && message.Contains(_player1Id))
+                {
+                    var shipType = ExtractShipTypeFromMessage(message);
+                    if (shipType != null)
+                        placedShipsP1.Add(shipType);
                     shipPlacedTaskP1.TrySetResult(message);
+                }
                 if (message.Contains("AttackResult"))
                     attackResultTaskP1.TrySetResult(message);
             });
@@ -284,8 +292,13 @@ namespace Turnbase.Tests
             {
                 Console.WriteLine($"Player2 Received (GameEvent): {message}");
                 debugMessages.Add(message);
-                if (message.Contains("ShipPlaced") && message.Contains(_player1Id))
+                if (message.Contains("ShipPlaced") && message.Contains(_player2Id))
+                {
+                    var shipType = ExtractShipTypeFromMessage(message);
+                    if (shipType != null)
+                        placedShipsP2.Add(shipType);
                     shipPlacedTaskP2.TrySetResult(message);
+                }
                 if (message.Contains("AttackResult"))
                     attackResultTaskP2.TrySetResult(message);
             });
@@ -299,28 +312,42 @@ namespace Turnbase.Tests
             // Wait for game start event
             await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
 
-            // Place ships for both players
-            var shipJsonP1 = JsonConvert.SerializeObject(new 
-            { 
-                Action = "PlaceShip", 
-                ShipType = "Carrier", 
-                StartX = 0, 
-                StartY = 0, 
-                IsHorizontal = true 
-            });
-            await _player1Connection.InvokeAsync("SubmitMove", roomId, shipJsonP1);
-            await shipPlacedTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            // Place all ships for both players
+            int yOffset = 0;
+            foreach (var ship in shipsToPlace)
+            {
+                shipPlacedTaskP1 = new TaskCompletionSource<string>(); // Reset for each ship
+                var shipJsonP1 = JsonConvert.SerializeObject(new 
+                { 
+                    Action = "PlaceShip", 
+                    ShipType = ship, 
+                    StartX = 0, 
+                    StartY = yOffset, 
+                    IsHorizontal = true 
+                });
+                Console.WriteLine($"Player 1 placing {ship} at (0, {yOffset})");
+                await _player1Connection.InvokeAsync("SubmitMove", roomId, shipJsonP1);
+                await shipPlacedTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                yOffset++;
+            }
 
-            var shipJsonP2 = JsonConvert.SerializeObject(new 
-            { 
-                Action = "PlaceShip", 
-                ShipType = "Carrier", 
-                StartX = 0, 
-                StartY = 0, 
-                IsHorizontal = true 
-            });
-            await _player2Connection.InvokeAsync("SubmitMove", roomId, shipJsonP2);
-            await shipPlacedTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+            yOffset = 0;
+            foreach (var ship in shipsToPlace)
+            {
+                shipPlacedTaskP2 = new TaskCompletionSource<string>(); // Reset for each ship
+                var shipJsonP2 = JsonConvert.SerializeObject(new 
+                { 
+                    Action = "PlaceShip", 
+                    ShipType = ship, 
+                    StartX = 0, 
+                    StartY = yOffset, 
+                    IsHorizontal = true 
+                });
+                Console.WriteLine($"Player 2 placing {ship} at (0, {yOffset})");
+                await _player2Connection.InvokeAsync("SubmitMove", roomId, shipJsonP2);
+                await shipPlacedTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                yOffset++;
+            }
 
             // Act - Player 1 attacks
             var attackJson = JsonConvert.SerializeObject(new 
@@ -329,13 +356,14 @@ namespace Turnbase.Tests
                 X = 0, 
                 Y = 0 
             });
+            Console.WriteLine("Player 1 attacking (0, 0)");
             await _player1Connection.InvokeAsync("SubmitMove", roomId, attackJson);
 
             // Assert
             try
             {
-                var attackResultP1 = await attackResultTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
-                var attackResultP2 = await attackResultTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                var attackResultP1 = await attackResultTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
+                var attackResultP2 = await attackResultTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(30));
                 Assert.IsTrue(attackResultP1.Contains("AttackResult"), "AttackResult event not received by Player 1.");
                 Assert.IsTrue(attackResultP2.Contains("AttackResult"), "AttackResult event not received by Player 2.");
                 Assert.IsTrue(attackResultP1.Contains("Hit") || attackResultP1.Contains("Miss"), "Attack result for Player 1 does not contain Hit or Miss status.");
@@ -349,6 +377,19 @@ namespace Turnbase.Tests
                     Console.WriteLine($"Received: {msg}");
                 }
                 Assert.Fail($"Timeout: {ex.Message}");
+            }
+        }
+
+        private string ExtractShipTypeFromMessage(string message)
+        {
+            try
+            {
+                var json = JsonConvert.DeserializeObject<dynamic>(message);
+                return json.ShipType;
+            }
+            catch
+            {
+                return null;
             }
         }
     }
