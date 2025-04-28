@@ -35,9 +35,9 @@ namespace Turnbase.Server.Hubs
                 IGameInstance gameInstance = _gameInstances.GetOrAdd(roomId, key =>
                 {
                     if (gameType == "Battleship")
-                        return new BattleshipGame(_eventDispatcher);
+                        return new BattleshipGame(_eventDispatcher, _logger);
                     else
-                        return new CoinFlipGame(_eventDispatcher);
+                        return new CoinFlipGame(_eventDispatcher, _logger);
                 });
 
                 gameInstance.RoomId = roomId;
@@ -150,9 +150,9 @@ namespace Turnbase.Server.Hubs
                 IGameInstance gameInstance = _gameInstances.GetOrAdd(roomId, key =>
                 {
                     if (gameType == "Battleship")
-                        return new BattleshipGame(_eventDispatcher);
+                        return new BattleshipGame(_eventDispatcher, _logger);
                     else
-                        return new CoinFlipGame(_eventDispatcher);
+                        return new CoinFlipGame(_eventDispatcher, _logger);
                 });
 
                 gameInstance.RoomId = roomId;
