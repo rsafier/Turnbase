@@ -41,9 +41,9 @@ builder.Services.AddAuthentication(options =>
         ValidateAudience = true,
         ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-        ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        ValidIssuer = builder.Configuration.GetValue<string>("Jwt:Issuer", "DefaultIssuer"),
+        ValidAudience = builder.Configuration.GetValue<string>("Jwt:Audience", "DefaultAudience"),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration.GetValue<string>("Jwt:Key", "DefaultKeyForTestingPurposesOnly1234567890")))
     };
     options.Events = new JwtBearerEvents
     {

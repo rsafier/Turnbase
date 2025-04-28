@@ -41,6 +41,16 @@ namespace Turnbase.Tests
                         services.AddSignalR();
                         services.AddDbContextFactory<GameContext>(options =>
                             options.UseSqlite("Data Source=:memory:"));
+                        // Add authentication and authorization services
+                        services.AddAuthentication(options =>
+                        {
+                            options.DefaultAuthenticateScheme = "TestScheme";
+                            options.DefaultChallengeScheme = "TestScheme";
+                        })
+                        .AddTestAuth(o => { }); // Custom test authentication handler
+                        
+                        services.AddAuthorization();
+                        
                         // Register a custom GameEventDispatcher for testing that actually saves to DB
                         services.AddSingleton<IGameEventDispatcher>(sp => 
                         {
@@ -52,6 +62,8 @@ namespace Turnbase.Tests
                     webHost.Configure(app =>
                     {
                         app.UseRouting();
+                        app.UseAuthentication();
+                        app.UseAuthorization();
                         app.UseEndpoints(endpoints =>
                         {
                             endpoints.MapHub<GameHub>("/gameHub");
@@ -153,8 +165,8 @@ namespace Turnbase.Tests
                     gameStartedTaskP2.TrySetResult(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "Battleship");
-            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "Battleship");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
 
             // Act
             await _player1Connection.InvokeAsync("StartGame", roomId);

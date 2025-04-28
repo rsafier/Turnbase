@@ -41,6 +41,16 @@ namespace Turnbase.Tests
                         services.AddSignalR();
                         services.AddDbContextFactory<GameContext>(options =>
                             options.UseSqlite("Data Source=:memory:"));
+                        // Add authentication and authorization services
+                        services.AddAuthentication(options =>
+                        {
+                            options.DefaultAuthenticateScheme = "TestScheme";
+                            options.DefaultChallengeScheme = "TestScheme";
+                        })
+                        .AddTestAuth(o => { }); // Custom test authentication handler
+                        
+                        services.AddAuthorization();
+                        
                         // Register a custom GameEventDispatcher for testing that actually saves to DB
                         services.AddSingleton<IGameEventDispatcher>(sp => 
                         {
@@ -52,6 +62,8 @@ namespace Turnbase.Tests
                     webHost.Configure(app =>
                     {
                         app.UseRouting();
+                        app.UseAuthentication();
+                        app.UseAuthorization();
                         app.UseEndpoints(endpoints =>
                         {
                             endpoints.MapHub<GameHub>("/gameHub");
@@ -208,8 +220,8 @@ namespace Turnbase.Tests
                 debugMessages.Add(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "CoinFlip");
-            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "CoinFlip");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
 
             // Explicitly start the game
             await _player1Connection.InvokeAsync("StartGame", roomId);
@@ -219,7 +231,7 @@ namespace Turnbase.Tests
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
-            await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, moveJson);
+            await _player1Connection.InvokeAsync("SubmitMove", roomId, moveJson);
 
             // Wait for game to end with a longer timeout
             try
