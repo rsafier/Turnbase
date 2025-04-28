@@ -73,7 +73,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Write tests in `Turnbase.Tests` to simulate SignalR client connections.  
   - Use in-memory SQLite database for state persistence testing.  
   - Validate end-to-end flow: joining room, making moves, receiving events, state saving/loading.  
-  **Note**: Integration tests are implemented in `CoinFlipGameIntegrationTests.cs` covering room joining, game events, and state persistence.
+  **Note**: Integration tests are implemented in `CoinFlipGameIntegrationTests.cs` covering room joining, game events, and state persistence. All tests are passing as of the latest run.
 
 - [X] **Full Implementation**  
   **Status**: Completed  
@@ -182,7 +182,7 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 - **Next Steps**:  
   1. Develop integration tests for the Battleship game to validate SignalR and database interactions.  
   2. Begin Phase 4 by planning enhancements like player authentication and room management.  
-- **Updates**: Phase 3 unit tests and logic for `BattleshipGame` are complete. The next focus is on integration tests to confirm end-to-end functionality for the Battleship game.
+- **Updates**: Phase 3 unit tests and logic for `BattleshipGame` are complete. CoinFlip integration tests are passing. The next focus is on integration tests to confirm end-to-end functionality for the Battleship game.
 
 ## Conclusion
 
