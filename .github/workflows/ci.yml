@@ -27,7 +27,7 @@ jobs:
     - name: Create Test Results Directory
       run: mkdir -p Turnbase.Tests/TestResults
     - name: Test with Coverage
-      run: dotnet test Turnbase.Tests --configuration Release --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=Turnbase.Tests/TestResults/coverage.opencover.xml
+      run: cd Turnbase.Tests && dotnet test --configuration Release --no-build --verbosity normal /p:CollectCoverage=true /p:CoverletOutputFormat=opencover /p:CoverletOutput=TestResults/coverage.opencover.xml
     - name: Upload Coverage Report
       uses: actions/upload-artifact@v3
       with:
