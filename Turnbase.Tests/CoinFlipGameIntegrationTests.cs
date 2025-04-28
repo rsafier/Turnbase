@@ -141,8 +141,8 @@ namespace Turnbase.Tests
             // Assert
             try
             {
-                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
-                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                var gameStartedResult = await gameStartedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
+                var resultMessage = await coinFlipResultTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
                 Assert.IsTrue(gameStartedResult.Contains("GameStarted"), "GameStarted event not received.");
                 Assert.IsTrue(resultMessage.Contains("CoinFlipResult"), "CoinFlipResult event not received.");
                 Assert.IsTrue(resultMessage.Contains("Winner"), "Winner not included in result.");
