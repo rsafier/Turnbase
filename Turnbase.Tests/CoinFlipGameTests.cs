@@ -81,7 +81,7 @@ namespace Turnbase.Tests
             await _game.ProcessPlayerEventAsync(userId, messageJson); // Second player tries to play out of turn
 
             // Assert
-            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Error"))), Times.Once);
+            _mockDispatcher.Verify(d => d.SendToUserAsync(userId, It.Is<string>(s => s.Contains("Not your turn"))), Times.Once);
         }
 
         [Test]
