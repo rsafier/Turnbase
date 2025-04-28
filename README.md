@@ -100,12 +100,12 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
   - Use `EventDispatcher` for targeted updates (hide opponent’s ships).
   **Note**: Logic is fully implemented with board management, ship placement, attack mechanics, and turn handling.
 
-- [ ] **Integration Tests for Battleship**  
-  **Status**: In Progress  
+- [X] **Integration Tests for Battleship**  
+  **Status**: Completed  
   - Write tests for multiplayer scenarios with SignalR clients.  
   - Test state persistence and recovery after disconnections.  
   - Validate turn mechanics and error conditions (invalid moves).  
-  **Note**: Integration tests are implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, attacks, and event handling. Two tests are still failing: `Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent` due to timeout issues. The `JoinRoom` test shows Player 1 receiving duplicate events for itself and Player 2 not receiving its own join event, indicating a potential issue with event broadcasting or test setup.
+  **Note**: Integration tests are implemented in `BattleshipGameIntegrationTests.cs` covering room joining, game start, ship placement, attacks, and event handling. All tests are now passing.
 
 - [X] **Full Implementation**  
   **Status**: Completed  
@@ -181,11 +181,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 ## Progress Notes
 
-- **Current Phase**: Phase 3 - TDD for Battleship-Style Game (Complex Game)  
+- **Current Phase**: Phase 4 - Engine Enhancements and Polish  
 - **Next Steps**:  
-  1. Debug and fix the failing integration tests for Battleship (`Attack_ValidAttack_ReceivesAttackResultEvent` and `JoinRoom_PlayersJoinRoom_ReceivesPlayerJoinedEvent`).  
-  2. Investigate potential issues with SignalR event delivery timing or test setup, focusing on why Player 1 receives duplicate join events and Player 2 misses its own join event.  
-- **Updates**: Integration tests for Battleship are still in progress with two failing tests due to timeouts. Recent changes to use connection IDs in tests did not resolve the issue. Further debugging is needed to address event broadcasting or reception problems. Additionally, full test coverage for `GameEventDispatcher` has been achieved, including exception handling for broadcast and user messaging. Authentication and room management features are implemented in `GameHub`.
+  1. Implement error handling and logging in game logic and hub methods using try-catch blocks and `ILogger`.  
+  2. Optimize performance by batching SignalR message updates and ensuring asynchronous operations for I/O tasks.  
+- **Updates**: Integration tests for Battleship are now complete with all tests passing. The project has moved to Phase 4, focusing on engine enhancements like error handling, logging, and performance optimization. Authentication and room management features are implemented in `GameHub`.
 
 ## Conclusion
 
