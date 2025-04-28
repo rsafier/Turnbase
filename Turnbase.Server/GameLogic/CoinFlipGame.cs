@@ -10,41 +10,64 @@ namespace Turnbase.Server.GameLogic
         private string _winner = string.Empty;
         private bool _isGameActive = false;
 
-        public CoinFlipGame(IGameEventDispatcher eventDispatcher) : base(eventDispatcher)
+        public CoinFlipGame(IGameEventDispatcher eventDispatcher, ILogger<BaseGameInstance> logger) : base(eventDispatcher, logger)
         {
         }
 
         public override async Task<bool> StartAsync()
         {
-            await base.StartAsync();
-            _isGameActive = true;
-            
-            // Notify players that the game has started
-            var startEvent = new { EventType = "GameStarted", GameType = "CoinFlip" };
-            await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(startEvent));
-            
-            return true;
+            try
+            {
+                await base.StartAsync();
+                _isGameActive = true;
+                
+                // Notify players that the game has started
+                var startEvent = new { EventType = "GameStarted", GameType = "CoinFlip" };
+                await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(startEvent));
+                
+                _logger.LogInformation("CoinFlip game started in room {RoomId}", RoomId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error starting CoinFlip game in room {RoomId}", RoomId);
+                throw;
+            }
         }
 
         public override async Task<bool> StopAsync()
         {
-            _isGameActive = false;
-            var endEvent = new { EventType = "GameEnded", Winner = _winner };
-            await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(endEvent));
-            
-            // Save the final game state
-            var finalState = new { GameType = "CoinFlip", Winner = _winner, IsActive = _isGameActive, TurnCount = TurnCount };
-            await EventDispatcher.SaveGameStateAsync(JsonConvert.SerializeObject(finalState));
-            
-            return await base.StopAsync();
+            try
+            {
+                _isGameActive = false;
+                var endEvent = new { EventType = "GameEnded", Winner = _winner };
+                await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(endEvent));
+                
+                // Save the final game state
+                var finalState = new { GameType = "CoinFlip", Winner = _winner, IsActive = _isGameActive, TurnCount = TurnCount };
+                await EventDispatcher.SaveGameStateAsync(JsonConvert.SerializeObject(finalState));
+                
+                _logger.LogInformation("CoinFlip game stopped in room {RoomId}. Winner: {Winner}", RoomId, _winner);
+                return await base.StopAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error stopping CoinFlip game in room {RoomId}", RoomId);
+                throw;
+            }
         }
 
         public override async Task ProcessPlayerEventAsync(string userId, string messageJson)
         {
-            if (!_isGameActive) return;
+            if (!_isGameActive)
+            {
+                _logger.LogWarning("User {UserId} attempted to process event in inactive CoinFlip game in room {RoomId}", userId, RoomId);
+                return;
+            }
 
             try
             {
+                _logger.LogInformation("Processing event for user {UserId} in room {RoomId}", userId, RoomId);
                 dynamic? move = JsonConvert.DeserializeObject(messageJson);
                 string? action = move?.Action?.ToString();
 
@@ -54,6 +77,7 @@ namespace Turnbase.Server.GameLogic
                     {
                         await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                             new { EventType = "Error", Message = "Not your turn" }));
+                        _logger.LogWarning("User {UserId} attempted coin flip out of turn in room {RoomId}", userId, RoomId);
                         return;
                     }
 
@@ -74,6 +98,7 @@ namespace Turnbase.Server.GameLogic
                     };
                     
                     await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(flipResult));
+                    _logger.LogInformation("Coin flip by {UserId} in room {RoomId}. Result: {IsHeads}, Winner: {Winner}", userId, RoomId, isHeads, _winner);
                     await StopAsync();
                 }
             }
@@ -81,6 +106,7 @@ namespace Turnbase.Server.GameLogic
             {
                 await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                     new { EventType = "Error", Message = ex.Message }));
+                _logger.LogError(ex, "Error processing event for user {UserId} in room {RoomId}", userId, RoomId);
             }
         }
 

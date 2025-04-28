@@ -194,5 +194,28 @@ namespace Turnbase.Tests
             Assert.IsNotNull(errorData);
             Assert.AreEqual("Error", errorData.EventType.ToString());
         }
+
+        [Test]
+        public async Task ProcessPlayerEventAsync_MalformedJson_SendsErrorMessage()
+        {
+            // Arrange
+            _mockDispatcher.SetupGet(d => d.ConnectedPlayers).Returns(new System.Collections.Concurrent.ConcurrentDictionary<string, string>(new Dictionary<string, string> { { "Player1", "" } }));
+            await _game.StartAsync();
+            string userId = "Player1";
+            var invalidJson = "malformed json data";
+            string capturedErrorJson = string.Empty;
+            _mockDispatcher.Setup(d => d.SendToUserAsync(It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string>((id, json) => capturedErrorJson = json)
+                .ReturnsAsync(true);
+
+            // Act
+            await _game.ProcessPlayerEventAsync(userId, invalidJson);
+
+            // Assert
+            Assert.IsFalse(string.IsNullOrEmpty(capturedErrorJson));
+            dynamic? errorData = JsonConvert.DeserializeObject(capturedErrorJson);
+            Assert.IsNotNull(errorData);
+            Assert.AreEqual("Error", errorData.EventType.ToString());
+        }
     }
 }

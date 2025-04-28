@@ -23,58 +23,81 @@ namespace Turnbase.Server.GameLogic
             { "Destroyer", 2 }
         };
 
-        public BattleshipGame(IGameEventDispatcher eventDispatcher) : base(eventDispatcher)
+        public BattleshipGame(IGameEventDispatcher eventDispatcher, ILogger<BaseGameInstance> logger) : base(eventDispatcher, logger)
         {
         }
 
         public override async Task<bool> StartAsync()
         {
-            await base.StartAsync();
-            _isGameActive = true;
-            _playerBoards.Clear();
-
-            // Initialize boards for connected players, if any
-            if (EventDispatcher.ConnectedPlayers != null)
+            try
             {
-                foreach (var playerId in EventDispatcher.ConnectedPlayers.Keys)
+                await base.StartAsync();
+                _isGameActive = true;
+                _playerBoards.Clear();
+
+                // Initialize boards for connected players, if any
+                if (EventDispatcher.ConnectedPlayers != null)
                 {
-                    _playerBoards[playerId] = new PlayerBoard(_boardSize, _shipSizes.Keys.ToList());
+                    foreach (var playerId in EventDispatcher.ConnectedPlayers.Keys)
+                    {
+                        _playerBoards[playerId] = new PlayerBoard(_boardSize, _shipSizes.Keys.ToList());
+                    }
                 }
+
+                // Notify players that the game has started
+                var startEvent = new { EventType = "GameStarted", GameType = "Battleship", BoardSize = _boardSize, Ships = _shipSizes.Keys };
+                await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(startEvent));
+
+                _logger.LogInformation("Battleship game started in room {RoomId} with {PlayerCount} players", RoomId, _playerBoards.Count);
+                return true;
             }
-
-            // Notify players that the game has started
-            var startEvent = new { EventType = "GameStarted", GameType = "Battleship", BoardSize = _boardSize, Ships = _shipSizes.Keys };
-            await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(startEvent));
-
-            return true;
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error starting Battleship game in room {RoomId}", RoomId);
+                throw;
+            }
         }
 
         public override async Task<bool> StopAsync()
         {
-            _isGameActive = false;
-            var endEvent = new { EventType = "GameEnded", Winner = _winner };
-            await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(endEvent));
-
-            // Save the final game state
-            var finalState = new
+            try
             {
-                GameType = "Battleship",
-                Winner = _winner,
-                IsActive = _isGameActive,
-                TurnCount = TurnCount,
-                PlayerBoards = _playerBoards.Select(pb => new { PlayerId = pb.Key, Board = pb.Value.Serialize() })
-            };
-            await EventDispatcher.SaveGameStateAsync(JsonConvert.SerializeObject(finalState));
+                _isGameActive = false;
+                var endEvent = new { EventType = "GameEnded", Winner = _winner };
+                await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(endEvent));
 
-            return await base.StopAsync();
+                // Save the final game state
+                var finalState = new
+                {
+                    GameType = "Battleship",
+                    Winner = _winner,
+                    IsActive = _isGameActive,
+                    TurnCount = TurnCount,
+                    PlayerBoards = _playerBoards.Select(pb => new { PlayerId = pb.Key, Board = pb.Value.Serialize() })
+                };
+                await EventDispatcher.SaveGameStateAsync(JsonConvert.SerializeObject(finalState));
+
+                _logger.LogInformation("Battleship game stopped in room {RoomId}. Winner: {Winner}", RoomId, _winner);
+                return await base.StopAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error stopping Battleship game in room {RoomId}", RoomId);
+                throw;
+            }
         }
 
         public override async Task ProcessPlayerEventAsync(string userId, string messageJson)
         {
-            if (!_isGameActive) return;
+            if (!_isGameActive)
+            {
+                _logger.LogWarning("User {UserId} attempted to process event in inactive game in room {RoomId}", userId, RoomId);
+                return;
+            }
 
             try
             {
+                _logger.LogInformation("Processing event for user {UserId} in room {RoomId}", userId, RoomId);
                 dynamic? move = JsonConvert.DeserializeObject(messageJson);
                 string? action = move?.Action?.ToString();
 
@@ -89,6 +112,7 @@ namespace Turnbase.Server.GameLogic
                     {
                         await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                             new { EventType = "Error", Message = "Player not found in game" }));
+                        _logger.LogWarning("Player {UserId} not found in game in room {RoomId}", userId, RoomId);
                         return;
                     }
 
@@ -97,12 +121,14 @@ namespace Turnbase.Server.GameLogic
                     {
                         var shipPlacedEvent = new { EventType = "ShipPlaced", PlayerId = userId, ShipType = shipType };
                         await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(shipPlacedEvent));
+                        _logger.LogInformation("Ship {ShipType} placed by user {UserId} in room {RoomId}", shipType, userId, RoomId);
 
                         // Check if all ships are placed to start attack phase
                         if (board.AllShipsPlaced())
                         {
                             var readyEvent = new { EventType = "PlayerReady", PlayerId = userId };
                             await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(readyEvent));
+                            _logger.LogInformation("Player {UserId} is ready in room {RoomId}", userId, RoomId);
 
                             // If all players are ready, start the attack phase
                             if (_playerBoards.Values.All(b => b.AllShipsPlaced()))
@@ -110,6 +136,7 @@ namespace Turnbase.Server.GameLogic
                                 _currentPlayer = EventDispatcher.ConnectedPlayers.Keys.First();
                                 var attackPhaseEvent = new { EventType = "AttackPhaseStarted", FirstTurn = _currentPlayer };
                                 await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(attackPhaseEvent));
+                                _logger.LogInformation("Attack phase started in room {RoomId} with first turn for {CurrentPlayer}", RoomId, _currentPlayer);
                             }
                         }
                     }
@@ -117,6 +144,7 @@ namespace Turnbase.Server.GameLogic
                     {
                         await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                             new { EventType = "Error", Message = "Invalid ship placement" }));
+                        _logger.LogWarning("Invalid ship placement by user {UserId} in room {RoomId}", userId, RoomId);
                     }
                 }
                 else if (action == "Attack")
@@ -125,6 +153,7 @@ namespace Turnbase.Server.GameLogic
                     {
                         await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                             new { EventType = "Error", Message = "Not your turn" }));
+                        _logger.LogWarning("User {UserId} attempted attack out of turn in room {RoomId}", userId, RoomId);
                         return;
                     }
 
@@ -136,6 +165,7 @@ namespace Turnbase.Server.GameLogic
                     {
                         await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                             new { EventType = "Error", Message = "No opponent found" }));
+                        _logger.LogWarning("No opponent found for user {UserId} in room {RoomId}", userId, RoomId);
                         return;
                     }
 
@@ -156,6 +186,7 @@ namespace Turnbase.Server.GameLogic
                         TurnCount = TurnCount
                     };
                     await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(attackResult));
+                    _logger.LogInformation("Attack by {AttackerId} on {DefenderId} at ({X},{Y}) in room {RoomId}. Hit: {IsHit}", userId, opponentId, x, y, RoomId, isHit);
 
                     // Switch turns
                     _currentPlayer = opponentId;
@@ -165,23 +196,27 @@ namespace Turnbase.Server.GameLogic
                     {
                         _winner = userId;
                         await StopAsync();
+                        _logger.LogInformation("Game over in room {RoomId}. Winner: {Winner}", RoomId, userId);
                     }
                     else
                     {
                         var turnEvent = new { EventType = "TurnChanged", CurrentPlayer = _currentPlayer };
                         await EventDispatcher.BroadcastAsync(JsonConvert.SerializeObject(turnEvent));
+                        _logger.LogInformation("Turn changed to {CurrentPlayer} in room {RoomId}", _currentPlayer, RoomId);
                     }
                 }
                 else
                 {
                     await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                         new { EventType = "Error", Message = "Invalid action" }));
+                    _logger.LogWarning("Invalid action by user {UserId} in room {RoomId}", userId, RoomId);
                 }
             }
             catch (Exception ex)
             {
                 await EventDispatcher.SendToUserAsync(userId, JsonConvert.SerializeObject(
                     new { EventType = "Error", Message = ex.Message }));
+                _logger.LogError(ex, "Error processing event for user {UserId} in room {RoomId}", userId, RoomId);
             }
         }
 
