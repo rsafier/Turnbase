@@ -123,8 +123,11 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id);
             await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id);
 
-            // Manually start the game by invoking a method or through game logic if needed
-            // For now, we'll assume the game starts with the first move
+            // Explicitly start the game
+            var gameInstance = _host.Services.GetRequiredService<IGameInstance>();
+            await gameInstance.StartAsync();
+
+            // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
 
@@ -146,13 +149,18 @@ namespace Turnbase.Tests
             await _player1Connection.InvokeAsync("JoinRoom", _roomId, _player1Id);
             await _player2Connection.InvokeAsync("JoinRoom", _roomId, _player2Id);
 
+            // Explicitly start the game
+            var gameInstance = _host.Services.GetRequiredService<IGameInstance>();
+            await gameInstance.StartAsync();
+
+            // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
 
             // Wait for game to end
             await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
 
-            // Act
+            // Check database state
             var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
             using var dbContext = dbContextFactory.CreateDbContext();
             var gameState = await dbContext.GameStates.FirstOrDefaultAsync();
