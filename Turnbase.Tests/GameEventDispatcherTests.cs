@@ -2,6 +2,7 @@ using Moq;
 using NUnit.Framework;
 using System.Threading.Tasks;
 using Turnbase.Server.GameLogic;
+using Turnbase.Server.Hubs;
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR;
 using System.Threading;
