@@ -343,7 +343,7 @@ namespace Turnbase.Tests
 
             // Wait a bit longer to ensure game start event is processed
             await Task.Delay(1000);
-
+            await Task.Yield();
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             await _player1Connection.InvokeAsync("SubmitMove", roomId, moveJson);
