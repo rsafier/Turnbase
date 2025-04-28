@@ -10,7 +10,7 @@ namespace Turnbase.Server.Models
         [Key]
         public int Id { get; set; }
         public int GameId { get; set; }
-        public string StateJson { get; set; }
+        public string StateJson { get; set; } = string.Empty;
         public DateTime CreatedDate { get; set; }
     }
 }

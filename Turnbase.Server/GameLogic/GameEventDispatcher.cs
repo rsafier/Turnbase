@@ -52,14 +52,14 @@ namespace Turnbase.Server.GameLogic
         {
             try
             {
-                var game = await _dbContext.Games.FindAsync(ulong.Parse(RoomId));
+                var gameId = int.Parse(RoomId);
+                var game = await _dbContext.Games.FindAsync(gameId);
                 if (game == null)
                 {
                     game = new Game 
                     { 
-                        Id = ulong.Parse(RoomId),
-                        GameName = "Game-" + RoomId,
-                        GameTypeName = "Unknown",
+                        Id = gameId,
+                        Name = "Game-" + RoomId,
                         CreatedDate = DateTime.UtcNow
                     };
                     _dbContext.Games.Add(game);
@@ -87,7 +87,7 @@ namespace Turnbase.Server.GameLogic
             // This method might need to be adjusted based on how state loading is implemented
             try
             {
-                var gameId = ulong.Parse(RoomId);
+                var gameId = int.Parse(RoomId);
                 var latestState = await _dbContext.GameStates
                     .Where(gs => gs.GameId == gameId)
                     .OrderByDescending(gs => gs.CreatedDate)

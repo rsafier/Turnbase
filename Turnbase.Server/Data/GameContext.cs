@@ -21,7 +21,8 @@ namespace Turnbase.Server.Data
                 .HasIndex(g => g.CreatedDate);
 
             modelBuilder.Entity<GameState>()
-                .HasIndex(gs => gs.CreatedDate)
+                .HasIndex(gs => gs.CreatedDate);
+            modelBuilder.Entity<GameState>()
                 .HasIndex(gs => gs.GameId);
 
             modelBuilder.Entity<PlayerMove>()
