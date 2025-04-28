@@ -33,6 +33,7 @@ namespace Turnbase.Tests
             _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
             _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object as IClientProxy);
             _mockClients.Setup(c => c.Client(It.IsAny<string>())).Returns(_mockClientProxy.Object);
+            _mockClients.Setup(c => c.User(It.IsAny<string>())).Returns(_mockClientProxy.Object);
 
             _dispatcher = new GameEventDispatcher(_mockHubContext.Object, _mockGameContext.Object);
             _dispatcher.ConnectedPlayers = _connectedPlayers;
@@ -72,7 +73,7 @@ namespace Turnbase.Tests
 
             // Assert
             Assert.IsFalse(result); // Current implementation returns false if there's an error, which might be the case here
-            _mockClients.Verify(c => c.Client(connectionId), Times.Once);
+            _mockClients.Verify(c => c.User(userId), Times.Once);
             _mockClientProxy.Verify(c => c.SendCoreAsync("GameEvent", It.Is<object[]>(o => o.Length == 1 && o[0].ToString() == eventJson), It.IsAny<CancellationToken>()), Times.Once);
         }
 
