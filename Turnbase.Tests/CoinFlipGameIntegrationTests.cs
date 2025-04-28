@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
@@ -27,29 +29,24 @@ namespace Turnbase.Tests
         public async Task Setup()
         {
             // Setup test host with SignalR and in-memory database
-            _host = await new HostBuilder()
-                .ConfigureWebHost(webBuilder =>
-                {
-                    webBuilder
-                        .UseTestServer()
-                        .ConfigureServices((context, services) =>
-                        {
-                            services.AddSignalR();
-                            services.AddDbContext<GameContext>(options =>
-                                options.UseSqlite("Data Source=:memory:"));
-                            services.AddSingleton<IGameInstance>(sp => new CoinFlipGame(sp.GetRequiredService<IGameEventDispatcher>()));
-                            services.AddSingleton<IGameEventDispatcher, GameEventDispatcher>();
-                        })
-                        .Configure(app =>
-                        {
-                            app.UseRouting();
-                            app.UseEndpoints(endpoints =>
-                            {
-                                endpoints.MapHub<GameHub>("/gameHub");
-                            });
-                        });
-                })
-                .StartAsync();
+            var builder = WebApplication.CreateBuilder();
+            builder.Services.AddSignalR();
+            builder.Services.AddDbContext<GameContext>(options =>
+                options.UseSqlite("Data Source=:memory:"));
+            builder.Services.AddSingleton<IGameInstance>(sp => new CoinFlipGame(sp.GetRequiredService<IGameEventDispatcher>()));
+            builder.Services.AddSingleton<IGameEventDispatcher, GameEventDispatcher>();
+            
+            builder.WebHost.UseTestServer();
+            
+            var app = builder.Build();
+            app.UseRouting();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapHub<GameHub>("/gameHub");
+            });
+            
+            _host = app;
+            await _host.StartAsync();
 
             // Open database connection for in-memory SQLite
             var dbContext = _host.Services.GetRequiredService<GameContext>();
@@ -57,12 +54,13 @@ namespace Turnbase.Tests
             await dbContext.Database.EnsureCreatedAsync();
 
             // Setup SignalR client connections for two players
-            var server = _host.GetTestServer();
+            var server = _host.Services.GetRequiredService<TestServer>();
+            var baseAddress = server.BaseAddress.ToString();
             _player1Connection = new HubConnectionBuilder()
-                .WithUrl(server.CreateHandler().BaseAddress + "gameHub")
+                .WithUrl(baseAddress + "gameHub")
                 .Build();
             _player2Connection = new HubConnectionBuilder()
-                .WithUrl(server.CreateHandler().BaseAddress + "gameHub")
+                .WithUrl(baseAddress + "gameHub")
                 .Build();
 
             await _player1Connection.StartAsync();
@@ -95,8 +93,8 @@ namespace Turnbase.Tests
             // Assert
             var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
             var player2Result = await player2JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(5));
-            Assert.AreEqual(_player1Id, player1Result);
-            Assert.AreEqual(_player2Id, player2Result);
+            Assert.That(player1Result, Is.EqualTo(_player1Id));
+            Assert.That(player2Result, Is.EqualTo(_player2Id));
         }
 
         [Test]
