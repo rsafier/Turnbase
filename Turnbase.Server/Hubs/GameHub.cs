@@ -16,8 +16,9 @@ namespace Turnbase.Server.Hubs
             _eventDispatcher = eventDispatcher;
         }
 
-        public async Task JoinRoom(string roomId, string userId, string gameType)
+        public async Task JoinRoom(string roomId, string gameType)
         {
+            var userId = Context.User.Identity.Name ?? Context.ConnectionId;
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
             _eventDispatcher.RoomId = roomId;
 
@@ -39,8 +40,9 @@ namespace Turnbase.Server.Hubs
             await Clients.Group(roomId).SendAsync("PlayerJoined", userId);
         }
 
-        public async Task LeaveRoom(string roomId, string userId)
+        public async Task LeaveRoom(string roomId)
         {
+            var userId = Context.User.Identity.Name ?? Context.ConnectionId;
             await Groups.RemoveFromGroupAsync(Context.ConnectionId, roomId);
             _eventDispatcher.ConnectedPlayers.TryRemove(userId, out _);
             await Clients.Group(roomId).SendAsync("PlayerLeft", userId);
@@ -52,8 +54,9 @@ namespace Turnbase.Server.Hubs
             }
         }
 
-        public async Task SubmitMove(string roomId, string userId, string moveJson)
+        public async Task SubmitMove(string roomId, string moveJson)
         {
+            var userId = Context.User.Identity.Name ?? Context.ConnectionId;
             if (_gameInstances.TryGetValue(roomId, out var gameInstance))
             {
                 await gameInstance.ProcessPlayerEventAsync(userId, moveJson);
@@ -71,6 +74,38 @@ namespace Turnbase.Server.Hubs
             {
                 await gameInstance.StartAsync();
             }
+        }
+
+        public async Task CreateRoom(string gameType)
+        {
+            var userId = Context.User.Identity.Name ?? Context.ConnectionId;
+            var roomId = Guid.NewGuid().ToString();
+            await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+            _eventDispatcher.RoomId = roomId;
+
+            // Add player to connected players
+            _eventDispatcher.ConnectedPlayers.TryAdd(userId, string.Empty);
+
+            // Create game instance based on game type
+            IGameInstance gameInstance = _gameInstances.GetOrAdd(roomId, key =>
+            {
+                if (gameType == "Battleship")
+                    return new BattleshipGame(_eventDispatcher);
+                else
+                    return new CoinFlipGame(_eventDispatcher);
+            });
+
+            gameInstance.RoomId = roomId;
+            gameInstance.EventDispatcher.RoomId = roomId;
+
+            await Clients.Caller.SendAsync("RoomCreated", roomId);
+            await Clients.Group(roomId).SendAsync("PlayerJoined", userId);
+        }
+
+        public async Task ListRooms()
+        {
+            var rooms = _gameInstances.Keys.ToList();
+            await Clients.Caller.SendAsync("RoomList", rooms);
         }
     }
 }

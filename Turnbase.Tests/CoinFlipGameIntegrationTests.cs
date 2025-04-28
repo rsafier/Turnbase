@@ -113,8 +113,8 @@ namespace Turnbase.Tests
             _player2Connection.On<string>("PlayerJoined", (userId) => player2JoinedTask.SetResult(userId));
 
             // Act
-            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "CoinFlip");
-            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "CoinFlip");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
 
             // Assert
             var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
@@ -149,8 +149,8 @@ namespace Turnbase.Tests
                 debugMessages.Add(message);
             });
 
-            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "CoinFlip");
-            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "CoinFlip");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, "CoinFlip");
 
             // Explicitly start the game
             await _player1Connection.InvokeAsync("StartGame", roomId);
@@ -160,7 +160,7 @@ namespace Turnbase.Tests
 
             // Act
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
-            await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, moveJson);
+            await _player1Connection.InvokeAsync("SubmitMove", roomId, moveJson);
 
             // Assert
             try

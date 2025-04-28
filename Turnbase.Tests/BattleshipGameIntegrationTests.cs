@@ -113,8 +113,8 @@ namespace Turnbase.Tests
             _player2Connection.On<string>("PlayerJoined", (userId) => player2JoinedTask.SetResult(userId));
 
             // Act
-            await _player1Connection.InvokeAsync("JoinRoom", roomId, _player1Id, "Battleship");
-            await _player2Connection.InvokeAsync("JoinRoom", roomId, _player2Id, "Battleship");
+            await _player1Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
+            await _player2Connection.InvokeAsync("JoinRoom", roomId, "Battleship");
 
             // Assert
             var player1Result = await player1JoinedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
@@ -218,7 +218,7 @@ namespace Turnbase.Tests
                 StartY = 0, 
                 IsHorizontal = true 
             });
-            await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, moveJson);
+            await _player1Connection.InvokeAsync("SubmitMove", roomId, moveJson);
 
             // Assert
             try
@@ -288,7 +288,7 @@ namespace Turnbase.Tests
                 StartY = 0, 
                 IsHorizontal = true 
             });
-            await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, shipJsonP1);
+            await _player1Connection.InvokeAsync("SubmitMove", roomId, shipJsonP1);
             await shipPlacedTaskP1.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
 
             var shipJsonP2 = JsonConvert.SerializeObject(new 
@@ -299,7 +299,7 @@ namespace Turnbase.Tests
                 StartY = 0, 
                 IsHorizontal = true 
             });
-            await _player2Connection.InvokeAsync("SubmitMove", roomId, _player2Id, shipJsonP2);
+            await _player2Connection.InvokeAsync("SubmitMove", roomId, shipJsonP2);
             await shipPlacedTaskP2.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
 
             // Act - Player 1 attacks
@@ -309,7 +309,7 @@ namespace Turnbase.Tests
                 X = 0, 
                 Y = 0 
             });
-            await _player1Connection.InvokeAsync("SubmitMove", roomId, _player1Id, attackJson);
+            await _player1Connection.InvokeAsync("SubmitMove", roomId, attackJson);
 
             // Assert
             try
