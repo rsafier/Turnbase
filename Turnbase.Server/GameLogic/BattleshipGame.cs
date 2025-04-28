@@ -33,10 +33,13 @@ namespace Turnbase.Server.GameLogic
             _isGameActive = true;
             _playerBoards.Clear();
 
-            // Initialize boards for connected players
-            foreach (var playerId in EventDispatcher.ConnectedPlayers.Keys)
+            // Initialize boards for connected players, if any
+            if (EventDispatcher.ConnectedPlayers != null)
             {
-                _playerBoards[playerId] = new PlayerBoard(_boardSize, _shipSizes.Keys.ToList());
+                foreach (var playerId in EventDispatcher.ConnectedPlayers.Keys)
+                {
+                    _playerBoards[playerId] = new PlayerBoard(_boardSize, _shipSizes.Keys.ToList());
+                }
             }
 
             // Notify players that the game has started
@@ -228,9 +231,9 @@ namespace Turnbase.Server.GameLogic
             }
         }
 
-        public bool PlaceShip(string shipType, int startX, int startY, bool isHorizontal)
+        public bool PlaceShip(string? shipType, int startX, int startY, bool isHorizontal)
         {
-            if (!_shipTypes.Contains(shipType) || _shipPositions.ContainsKey(shipType))
+            if (string.IsNullOrEmpty(shipType) || !_shipTypes.Contains(shipType) || _shipPositions.ContainsKey(shipType))
                 return false;
 
             int length = _shipSizes[shipType];

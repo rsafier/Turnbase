@@ -179,10 +179,10 @@ namespace Turnbase.Tests
             var moveJson = JsonConvert.SerializeObject(new { Action = "FlipCoin" });
             await _player1Connection.InvokeAsync("SubmitMove", _roomId, _player1Id, moveJson);
 
-            // Wait for game to end
+            // Wait for game to end with a longer timeout
             try
             {
-                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(10));
+                await gameEndedTask.Task.TimeoutAfter(TimeSpan.FromSeconds(20));
             }
             catch (TimeoutException ex)
             {

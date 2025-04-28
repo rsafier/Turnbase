@@ -27,6 +27,7 @@ namespace Turnbase.Tests
             _mockDispatcher.Setup(d => d.BroadcastAsync(It.IsAny<string>()))
                 .Callback<string>(json => capturedEventJson = json)
                 .ReturnsAsync(true);
+            _mockDispatcher.SetupGet(d => d.ConnectedPlayers).Returns(new System.Collections.Concurrent.ConcurrentDictionary<string, string>());
 
             // Act
             var result = await _game.StartAsync();
@@ -34,7 +35,8 @@ namespace Turnbase.Tests
             // Assert
             Assert.IsTrue(result);
             Assert.IsFalse(string.IsNullOrEmpty(capturedEventJson));
-            dynamic eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            dynamic? eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            Assert.IsNotNull(eventData);
             Assert.AreEqual("GameStarted", eventData.EventType.ToString());
             Assert.AreEqual("Battleship", eventData.GameType.ToString());
         }
@@ -49,6 +51,7 @@ namespace Turnbase.Tests
                 .ReturnsAsync(true);
             _mockDispatcher.Setup(d => d.SaveGameStateAsync(It.IsAny<string>()))
                 .ReturnsAsync(true);
+            _mockDispatcher.SetupGet(d => d.ConnectedPlayers).Returns(new System.Collections.Concurrent.ConcurrentDictionary<string, string>());
 
             // Act
             await _game.StartAsync(); // Start to set game active
@@ -57,7 +60,8 @@ namespace Turnbase.Tests
             // Assert
             Assert.IsTrue(result);
             Assert.IsFalse(string.IsNullOrEmpty(capturedEventJson));
-            dynamic eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            dynamic? eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            Assert.IsNotNull(eventData);
             Assert.AreEqual("GameEnded", eventData.EventType.ToString());
         }
 
@@ -80,6 +84,7 @@ namespace Turnbase.Tests
         public async Task ProcessPlayerEventAsync_PlaceShipValid_SavesShipPlacementAndBroadcastsUpdate()
         {
             // Arrange
+            _mockDispatcher.SetupGet(d => d.ConnectedPlayers).Returns(new System.Collections.Concurrent.ConcurrentDictionary<string, string>(new Dictionary<string, string> { { "Player1", "" } }));
             await _game.StartAsync();
             string userId = "Player1";
             var moveJson = JsonConvert.SerializeObject(new { Action = "PlaceShip", ShipType = "Carrier", StartX = 0, StartY = 0, IsHorizontal = true });
@@ -93,7 +98,8 @@ namespace Turnbase.Tests
 
             // Assert
             Assert.IsFalse(string.IsNullOrEmpty(capturedEventJson));
-            dynamic eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            dynamic? eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            Assert.IsNotNull(eventData);
             Assert.AreEqual("ShipPlaced", eventData.EventType.ToString());
             Assert.AreEqual(userId, eventData.PlayerId.ToString());
         }
@@ -102,6 +108,7 @@ namespace Turnbase.Tests
         public async Task ProcessPlayerEventAsync_AttackValid_BroadcastsHitOrMiss()
         {
             // Arrange
+            _mockDispatcher.SetupGet(d => d.ConnectedPlayers).Returns(new System.Collections.Concurrent.ConcurrentDictionary<string, string>(new Dictionary<string, string> { { "Player1", "" }, { "Player2", "" } }));
             await _game.StartAsync();
             string attackerId = "Player1";
             string defenderId = "Player2";
@@ -120,7 +127,8 @@ namespace Turnbase.Tests
 
             // Assert
             Assert.IsFalse(string.IsNullOrEmpty(capturedEventJson));
-            dynamic eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            dynamic? eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            Assert.IsNotNull(eventData);
             Assert.AreEqual("AttackResult", eventData.EventType.ToString());
             Assert.AreEqual(attackerId, eventData.AttackerId.ToString());
             Assert.IsTrue(eventData.IsHit.ToString() == "True" || eventData.IsHit.ToString() == "False");
@@ -130,6 +138,7 @@ namespace Turnbase.Tests
         public async Task ProcessPlayerEventAsync_WinConditionMet_BroadcastsGameEnded()
         {
             // Arrange
+            _mockDispatcher.SetupGet(d => d.ConnectedPlayers).Returns(new System.Collections.Concurrent.ConcurrentDictionary<string, string>(new Dictionary<string, string> { { "Player1", "" }, { "Player2", "" } }));
             await _game.StartAsync();
             string attackerId = "Player1";
             string defenderId = "Player2";
@@ -152,7 +161,8 @@ namespace Turnbase.Tests
 
             // Assert
             Assert.IsFalse(string.IsNullOrEmpty(capturedEventJson));
-            dynamic eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            dynamic? eventData = JsonConvert.DeserializeObject(capturedEventJson);
+            Assert.IsNotNull(eventData);
             // Check if the last broadcast was GameEnded due to all ships sunk
             if (eventData.EventType.ToString() == "GameEnded")
             {
@@ -164,6 +174,7 @@ namespace Turnbase.Tests
         public async Task ProcessPlayerEventAsync_InvalidAction_SendsErrorMessage()
         {
             // Arrange
+            _mockDispatcher.SetupGet(d => d.ConnectedPlayers).Returns(new System.Collections.Concurrent.ConcurrentDictionary<string, string>(new Dictionary<string, string> { { "Player1", "" } }));
             await _game.StartAsync();
             string userId = "Player1";
             var invalidMoveJson = JsonConvert.SerializeObject(new { Action = "InvalidAction" });
@@ -177,7 +188,8 @@ namespace Turnbase.Tests
 
             // Assert
             Assert.IsFalse(string.IsNullOrEmpty(capturedErrorJson));
-            dynamic errorData = JsonConvert.DeserializeObject(capturedErrorJson);
+            dynamic? errorData = JsonConvert.DeserializeObject(capturedErrorJson);
+            Assert.IsNotNull(errorData);
             Assert.AreEqual("Error", errorData.EventType.ToString());
         }
     }
