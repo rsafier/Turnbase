@@ -5,13 +5,14 @@ using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using System;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Turnbase.Server.Data;
 using Turnbase.Server.GameLogic;
 using Turnbase.Server.Hubs;
+using Newtonsoft.Json;
 
 namespace Turnbase.Tests
 {
@@ -28,26 +29,27 @@ namespace Turnbase.Tests
         [SetUp]
         public async Task Setup()
         {
-            // Setup test host with SignalR and in-memory database
-            var builder = WebApplication.CreateBuilder();
-            builder.Services.AddSignalR();
-            // Configure GameContext with a factory to handle constructor issues
-            builder.Services.AddDbContextFactory<GameContext>(options =>
-                options.UseSqlite("Data Source=:memory:"));
-            builder.Services.AddSingleton<IGameInstance>(sp => new CoinFlipGame(sp.GetRequiredService<IGameEventDispatcher>()));
-            builder.Services.AddSingleton<IGameEventDispatcher, GameEventDispatcher>();
-            
-            builder.WebHost.UseTestServer();
-            
-            var app = builder.Build();
-            app.UseRouting();
-            app.UseEndpoints(endpoints =>
-            {
-                endpoints.MapHub<GameHub>("/gameHub");
-            });
-            
-            _host = app;
-            await _host.StartAsync();
+            // Setup test host with SignalR and in-memory database using TestServer
+            var hostBuilder = new HostBuilder()
+                .ConfigureWebHost(webHost =>
+                {
+                    webHost.UseTestServer();
+                    webHost.ConfigureServices((context, services) =>
+                    {
+                        services.AddSignalR();
+                        services.AddDbContextFactory<GameContext>(options =>
+                            options.UseSqlite("Data Source=:memory:"));
+                        services.AddSingleton<IGameInstance>(sp => new CoinFlipGame(sp.GetRequiredService<IGameEventDispatcher>()));
+                        services.AddSingleton<IGameEventDispatcher, GameEventDispatcher>();
+                    });
+                    webHost.Configure(app =>
+                    {
+                        app.UseRouting();
+                        app.MapHub<GameHub>("/gameHub");
+                    });
+                });
+
+            _host = await hostBuilder.StartAsync();
 
             // Open database connection for in-memory SQLite using factory
             var dbContextFactory = _host.Services.GetRequiredService<IDbContextFactory<GameContext>>();
@@ -56,13 +58,19 @@ namespace Turnbase.Tests
             await dbContext.Database.EnsureCreatedAsync();
 
             // Setup SignalR client connections for two players
-            var server = _host.Services.GetRequiredService<TestServer>();
-            var baseAddress = server.BaseAddress.ToString();
+            var testServer = _host.GetTestServer();
+            var clientHandler = testServer.CreateHandler();
             _player1Connection = new HubConnectionBuilder()
-                .WithUrl(baseAddress + "gameHub")
+                .WithUrl(new Uri(testServer.BaseAddress, "gameHub"), options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => clientHandler;
+                })
                 .Build();
             _player2Connection = new HubConnectionBuilder()
-                .WithUrl(baseAddress + "gameHub")
+                .WithUrl(new Uri(testServer.BaseAddress, "gameHub"), options =>
+                {
+                    options.HttpMessageHandlerFactory = _ => clientHandler;
+                })
                 .Build();
 
             await _player1Connection.StartAsync();
