@@ -11,8 +11,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Turnbase.Server.Models;
 using System.Linq;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
+using System.Collections.Generic;
 
 namespace Turnbase.Tests
 {
@@ -25,9 +24,9 @@ namespace Turnbase.Tests
         private Mock<IHubClients> _mockClients;
         private Mock<IClientProxy> _mockClientProxy;
         private Mock<GameContext> _mockGameContext;
-        private Mock<DbSet<Game>> _mockGameSet;
-        private Mock<DbSet<GameState>> _mockGameStateSet;
         private ConcurrentDictionary<string, string> _connectedPlayers;
+        private List<Game> _games;
+        private List<GameState> _gameStates;
 
         [SetUp]
         public void Setup()
@@ -36,54 +35,46 @@ namespace Turnbase.Tests
             _mockClients = new Mock<IHubClients>();
             _mockClientProxy = new Mock<IClientProxy>();
             _mockGameContext = new Mock<GameContext>();
-            _mockGameSet = new Mock<DbSet<Game>>();
-            _mockGameStateSet = new Mock<DbSet<GameState>>();
             _connectedPlayers = new ConcurrentDictionary<string, string>();
+            _games = new List<Game>();
+            _gameStates = new List<GameState>();
 
             _mockHubContext.Setup(h => h.Clients).Returns(_mockClients.Object);
             _mockClients.Setup(c => c.Group(It.IsAny<string>())).Returns(_mockClientProxy.Object);
             _mockClients.Setup(c => c.User(It.IsAny<string>())).Returns(_mockClientProxy.Object);
 
-            // Setup mock for database operations
-            SetupDbSetMock(_mockGameSet);
-            SetupDbSetMock(_mockGameStateSet);
-
             // Mock specific methods for database operations
             _mockGameContext.Setup(g => g.FindAsync<Game>(It.IsAny<object[]>(), It.IsAny<CancellationToken>())).ReturnsAsync((object[] keys, CancellationToken token) => 
             {
                 int id = (int)keys[0];
-                return new Game { Id = id, Name = "Game-" + id, CreatedDate = DateTime.UtcNow };
+                var game = _games.FirstOrDefault(g => g.Id == id);
+                if (game == null)
+                {
+                    game = new Game { Id = id, Name = "Game-" + id, CreatedDate = DateTime.UtcNow };
+                    _games.Add(game);
+                }
+                return game;
             });
 
-            _mockGameContext.Setup(g => g.Games).Returns(_mockGameSet.Object);
-            _mockGameContext.Setup(g => g.GameStates).Returns(_mockGameStateSet.Object);
-            _mockGameContext.Setup(g => g.Add(It.IsAny<Game>())).Callback<Game>(game => { });
-            _mockGameContext.Setup(g => g.Add(It.IsAny<GameState>())).Callback<GameState>(state => { });
+            _mockGameContext.Setup(g => g.Add(It.IsAny<Game>())).Callback<Game>(game => _games.Add(game));
+            _mockGameContext.Setup(g => g.Add(It.IsAny<GameState>())).Callback<GameState>(state => _gameStates.Add(state));
             _mockGameContext.Setup(g => g.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            // Setup queryable for GameStates and Games
-            _mockGameContext.Setup(g => g.Set<GameState>()).Returns(_mockGameStateSet.Object);
-            _mockGameContext.Setup(g => g.Set<Game>()).Returns(_mockGameSet.Object);
-
-            // Mock the database facade to avoid constructor issues
-            var mockDatabaseFacade = new Mock<DatabaseFacade>(_mockGameContext.Object);
-            _mockGameContext.Setup(g => g.Database).Returns(mockDatabaseFacade.Object);
+            // Mock queryable for GameStates
+            _mockGameContext.Setup(g => g.Set<GameState>()).Returns(() => 
+            {
+                var mockSet = new Mock<DbSet<GameState>>();
+                var queryable = _gameStates.AsQueryable();
+                mockSet.As<IQueryable<GameState>>().Setup(q => q.Provider).Returns(queryable.Provider);
+                mockSet.As<IQueryable<GameState>>().Setup(q => q.Expression).Returns(queryable.Expression);
+                mockSet.As<IQueryable<GameState>>().Setup(q => q.ElementType).Returns(queryable.ElementType);
+                mockSet.As<IQueryable<GameState>>().Setup(q => q.GetEnumerator()).Returns(queryable.GetEnumerator());
+                return mockSet.Object;
+            });
 
             _dispatcher = new GameEventDispatcher(_mockHubContext.Object, _mockGameContext.Object);
             _dispatcher.RoomId = "1"; // Default room ID for tests
             _dispatcher.ConnectedPlayers = _connectedPlayers;
-        }
-
-        private void SetupDbSetMock<T>(Mock<DbSet<T>> mockSet) where T : class
-        {
-            var mockQueryable = new Mock<IQueryable<T>>();
-            var mockAsyncEnumerable = new Mock<IAsyncEnumerable<T>>();
-
-            mockSet.As<IQueryable<T>>().Setup(q => q.Provider).Returns(mockQueryable.Object.Provider);
-            mockSet.As<IQueryable<T>>().Setup(q => q.Expression).Returns(mockQueryable.Object.Expression);
-            mockSet.As<IQueryable<T>>().Setup(q => q.ElementType).Returns(mockQueryable.Object.ElementType);
-            mockSet.As<IQueryable<T>>().Setup(q => q.GetEnumerator()).Returns(mockQueryable.Object.GetEnumerator());
-            mockSet.As<IAsyncEnumerable<T>>().Setup(a => a.GetAsyncEnumerator(It.IsAny<CancellationToken>())).Returns(mockAsyncEnumerable.Object.GetAsyncEnumerator(It.IsAny<CancellationToken>()));
         }
 
         [Test]
@@ -293,13 +284,7 @@ namespace Turnbase.Tests
             // Arrange
             string stateJson = string.Empty; // Output parameter, will be set by method
             _dispatcher.RoomId = "1";
-            var gameState = new GameState { GameId = 1, StateJson = "{\"State\": \"LoadedState\"}", CreatedDate = DateTime.UtcNow };
-            var gameStates = new[] { gameState }.AsQueryable();
-
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.Provider).Returns(gameStates.Provider);
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.Expression).Returns(gameStates.Expression);
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.ElementType).Returns(gameStates.ElementType);
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.GetEnumerator()).Returns(gameStates.GetEnumerator());
+            _gameStates.Add(new GameState { GameId = 1, StateJson = "{\"State\": \"LoadedState\"}", CreatedDate = DateTime.UtcNow });
 
             // Act
             bool result = await _dispatcher.LoadGameStateAsync(stateJson);
@@ -314,12 +299,7 @@ namespace Turnbase.Tests
             // Arrange
             string stateJson = string.Empty;
             _dispatcher.RoomId = "1";
-            var gameStates = new GameState[0].AsQueryable();
-
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.Provider).Returns(gameStates.Provider);
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.Expression).Returns(gameStates.Expression);
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.ElementType).Returns(gameStates.ElementType);
-            _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.GetEnumerator()).Returns(gameStates.GetEnumerator());
+            _gameStates.Clear(); // Ensure no states exist
 
             // Act
             bool result = await _dispatcher.LoadGameStateAsync(stateJson);

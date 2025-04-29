@@ -161,9 +161,13 @@ namespace Turnbase.Server.GameLogic
         {
             try
             {
-                var gameId = int.Parse(RoomId);
+                if (!int.TryParse(RoomId, out int gameId))
+                {
+                    Console.WriteLine($"Error loading game state for room {RoomId}: Invalid room ID format.");
+                    return false;
+                }
+
                 var latestState = await _dbContext.GameStates
-                    .AsNoTracking()
                     .Where(gs => gs.GameId == gameId)
                     .OrderByDescending(gs => gs.CreatedDate)
                     .FirstOrDefaultAsync();
