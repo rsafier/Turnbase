@@ -63,10 +63,6 @@ namespace Turnbase.Tests
             _mockGameContext.Setup(g => g.Set<GameState>()).Returns(_mockGameStateSet.Object);
             _mockGameContext.Setup(g => g.Set<Game>()).Returns(_mockGameSet.Object);
 
-            // Mock the Games and GameStates properties
-            _mockGameContext.SetupProperty(g => g.Games, _mockGameSet.Object);
-            _mockGameContext.SetupProperty(g => g.GameStates, _mockGameStateSet.Object);
-
             // Mock the database facade to avoid constructor issues
             var mockDatabaseFacade = new Mock<DatabaseFacade>(_mockGameContext.Object);
             _mockGameContext.Setup(g => g.Database).Returns(mockDatabaseFacade.Object);
