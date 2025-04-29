@@ -182,11 +182,11 @@ The turn-based multiplayer game engine leverages SignalR for real-time communica
 
 ## Progress Notes
 
-- **Current Phase**: Phase 5 - Documentation and Deployment  
+- **Current Phase**: Phase 4 - Engine Enhancements and Polish  
 - **Next Steps**:  
-  1. Document public interfaces, hub methods, and provide game rules and setup instructions for Coin Flip and Battleship.  
-  2. Deploy to a test environment (Azure App Service or local server with Docker) and perform load testing with multiple concurrent game rooms.  
-- **Updates**: Performance optimization testing has been completed successfully with SignalR message batching and asynchronous operations for I/O tasks. Error handling and logging are fully implemented across game logic and hub components using try-catch blocks and `ILogger`. All tests are passing with warnings related to test output verbosity. The project has moved to Phase 5, focusing on documentation and deployment.
+  1. Fix failing tests in `GameEventDispatcherTests.cs` related to `SaveGameStateAsync` and `LoadGameStateAsync`.  
+  2. Ensure all tests pass before moving to documentation and deployment phases.  
+- **Updates**: Performance optimization testing has been completed successfully with SignalR message batching and asynchronous operations for I/O tasks. Error handling and logging are fully implemented across game logic and hub components using try-catch blocks and `ILogger`. Currently, there are 2 failing tests in `GameEventDispatcherTests.cs` related to game state saving and loading due to object reference errors in the mocked environment. Focus is on resolving these test issues before proceeding to Phase 5.
 
 ## Conclusion
 
