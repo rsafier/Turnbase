@@ -59,9 +59,13 @@ namespace Turnbase.Tests
             _mockGameContext.Setup(g => g.Add(It.IsAny<GameState>())).Callback<GameState>(state => { });
             _mockGameContext.Setup(g => g.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
 
-            // Setup queryable for GameStates
+            // Setup queryable for GameStates and Games
             _mockGameContext.Setup(g => g.Set<GameState>()).Returns(_mockGameStateSet.Object);
             _mockGameContext.Setup(g => g.Set<Game>()).Returns(_mockGameSet.Object);
+
+            // Mock the Games and GameStates properties
+            _mockGameContext.SetupProperty(g => g.Games, _mockGameSet.Object);
+            _mockGameContext.SetupProperty(g => g.GameStates, _mockGameStateSet.Object);
 
             // Mock the database facade to avoid constructor issues
             var mockDatabaseFacade = new Mock<DatabaseFacade>(_mockGameContext.Object);
@@ -299,6 +303,9 @@ namespace Turnbase.Tests
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.ElementType).Returns(gameStates.ElementType);
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.GetEnumerator()).Returns(gameStates.GetEnumerator());
 
+            // Mock AsNoTracking to return the same queryable
+            _mockGameStateSet.Setup(q => q.AsNoTracking()).Returns(_mockGameStateSet.Object);
+
             // Act
             bool result = await _dispatcher.LoadGameStateAsync(stateJson);
 
@@ -318,6 +325,9 @@ namespace Turnbase.Tests
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.Expression).Returns(gameStates.Expression);
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.ElementType).Returns(gameStates.ElementType);
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.GetEnumerator()).Returns(gameStates.GetEnumerator());
+
+            // Mock AsNoTracking to return the same queryable
+            _mockGameStateSet.Setup(q => q.AsNoTracking()).Returns(_mockGameStateSet.Object);
 
             // Act
             bool result = await _dispatcher.LoadGameStateAsync(stateJson);
