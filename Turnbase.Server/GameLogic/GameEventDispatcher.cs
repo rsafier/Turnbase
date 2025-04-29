@@ -120,7 +120,12 @@ namespace Turnbase.Server.GameLogic
         {
             try
             {
-                var gameId = int.Parse(RoomId);
+                if (!int.TryParse(RoomId, out int gameId))
+                {
+                    Console.WriteLine($"Error saving game state for room {RoomId}: Invalid room ID format.");
+                    return false;
+                }
+
                 var game = await _dbContext.Games.FindAsync(gameId);
                 if (game == null)
                 {
@@ -131,6 +136,7 @@ namespace Turnbase.Server.GameLogic
                         CreatedDate = DateTime.UtcNow
                     };
                     _dbContext.Games.Add(game);
+                    await _dbContext.SaveChangesAsync(CancellationToken.None);
                 }
 
                 var gameState = new GameState

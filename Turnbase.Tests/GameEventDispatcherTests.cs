@@ -55,6 +55,8 @@ namespace Turnbase.Tests
                 return new Game { Id = id, Name = "Game-" + id, CreatedDate = DateTime.UtcNow };
             });
 
+            _mockGameContext.Setup(g => g.Games).Returns(_mockGameSet.Object);
+            _mockGameContext.Setup(g => g.GameStates).Returns(_mockGameStateSet.Object);
             _mockGameContext.Setup(g => g.Add(It.IsAny<Game>())).Callback<Game>(game => { });
             _mockGameContext.Setup(g => g.Add(It.IsAny<GameState>())).Callback<GameState>(state => { });
             _mockGameContext.Setup(g => g.SaveChangesAsync(It.IsAny<CancellationToken>())).ReturnsAsync(1);
@@ -299,9 +301,6 @@ namespace Turnbase.Tests
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.ElementType).Returns(gameStates.ElementType);
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.GetEnumerator()).Returns(gameStates.GetEnumerator());
 
-            // Mock AsNoTracking to return the same queryable
-            _mockGameStateSet.Setup(q => q.AsNoTracking()).Returns(_mockGameStateSet.Object);
-
             // Act
             bool result = await _dispatcher.LoadGameStateAsync(stateJson);
 
@@ -321,9 +320,6 @@ namespace Turnbase.Tests
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.Expression).Returns(gameStates.Expression);
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.ElementType).Returns(gameStates.ElementType);
             _mockGameStateSet.As<IQueryable<GameState>>().Setup(q => q.GetEnumerator()).Returns(gameStates.GetEnumerator());
-
-            // Mock AsNoTracking to return the same queryable
-            _mockGameStateSet.Setup(q => q.AsNoTracking()).Returns(_mockGameStateSet.Object);
 
             // Act
             bool result = await _dispatcher.LoadGameStateAsync(stateJson);
